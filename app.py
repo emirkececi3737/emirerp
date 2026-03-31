@@ -234,18 +234,31 @@ def send_wa_live_bot(mesaj):
     try:
         df_a = pd.read_csv(S_FILE)
         aboneler = df_a[df_a['tip'] == 'WA_BOT_SUB']['deger'].tolist()
-        p_old = df_a[df_a['tip'] == 'BOT_PHONE']['deger'].iloc[0] if not df_a[df_a['tip'] == 'BOT_PHONE'].empty else None
-        k_old = df_a[df_a['tip'] == 'BOT_APIKEY']['deger'].iloc[0] if not df_a[df_a['tip'] == 'BOT_APIKEY'].empty else None
+        
+        # Eski sistem uyumluluğu
+        p_old_series = df_a[df_a['tip'] == 'BOT_PHONE']['deger']
+        k_old_series = df_a[df_a['tip'] == 'BOT_APIKEY']['deger']
+        p_old = p_old_series.iloc[0] if not p_old_series.empty else None
+        k_old = k_old_series.iloc[0] if not k_old_series.empty else None
+        
         if p_old and k_old:
             aboneler.append(f"Eski Sistem|{p_old}|{k_old}")
             
         for abone in aboneler:
             parcalar = abone.split('|')
             if len(parcalar) == 3:
-                p = str(parcalar[1]).strip().replace(" ", "")
+                # Numaradaki boşlukları ve "+" işaretini zorla siliyoruz
+                p = str(parcalar[1]).strip().replace(" ", "").replace("+", "")
                 k = str(parcalar[2]).strip()
+                
+                # CallMeBot API'sine istek at
                 url = f"https://api.callmebot.com/whatsapp.php?phone={p}&text={urllib.parse.quote(mesaj)}&apikey={k}"
-                requests.get(url, timeout=5)
+                res = requests.get(url, timeout=10)
+                
+                # Eğer sunucudan olumsuz yanıt gelirse arka planda uyar
+                if res.status_code != 200:
+                    print(f"⚠️ CallMeBot İletim Hatası ({p}): {res.text}")
+                    
     except Exception as e: 
         print(f"🚨 SİSTEM HATASI (WhatsApp Çoklu Bot): {str(e)}")
 
