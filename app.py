@@ -66,6 +66,34 @@ st.markdown("""
     }
     div[data-testid="stSidebarNav"] { display: none; }
 
+    /* YENİ: OK YERİNE "MENÜ" BUTONU TASARIMI */
+    [data-testid="collapsedControl"] svg {
+        display: none !important;
+    }
+    [data-testid="collapsedControl"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        border-radius: 8px !important;
+        padding: 10px 18px !important;
+        width: auto !important;
+        height: auto !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        margin: 15px !important;
+        z-index: 999999 !important;
+        transition: 0.3s;
+    }
+    [data-testid="collapsedControl"]::after {
+        content: "☰ MENÜ";
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 14px;
+        color: white !important;
+        letter-spacing: 0.5px;
+    }
+    [data-testid="collapsedControl"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+    }
+
     div[data-testid="stMetric"] {
         background-color: #ffffff !important; border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
@@ -616,7 +644,8 @@ else:
         st.title("🤖 Yapay Zeka Asistanı")
         
         st.markdown("""
-
+            <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; border-left: 5px solid #0284c7; margin-bottom: 20px;">
+                <h4 style="color: #0284c7 !important; margin-top: 0;">Zaman Bazlı Akıllı Sohbet</h4>
                 <p style="color: #0f172a !important; margin-bottom: 0;">Sisteme zaman belirterek sorular sorabilirsiniz:<br> <i>"Bu ay toplam ciro ne kadar?", "Geçen ay en aktif operatör kim?", "Bugün en çok masraf çıkaran makine hangisi?"</i></p>
             </div>
         """, unsafe_allow_html=True)
