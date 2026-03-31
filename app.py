@@ -280,7 +280,7 @@ def send_excel_via_email(receiver_email, excel_bytes, filename):
 def akilli_asistan_cevapla(soru, df):
     soru = soru.lower()
     if df.empty: 
-        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor patron."
+        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor ."
     
     df['Tarih_DT'] = pd.to_datetime(df['Tarih'], errors='coerce')
     bugun = datetime.date.today()
@@ -321,7 +321,7 @@ def akilli_asistan_cevapla(soru, df):
         son = df.iloc[-1]
         return f"📅 Son işlem: **{son['Firma']}** firmasına **{son['Operatör']}** tarafından **{son['Makine']}** için yapılmış. Tutar: {son['Fiyat']} TL."
     else:
-        return "🤖 Üzgünüm patron, anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
+        return "🤖 Üzgünüm , anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
 
 # --- 5. GİRİŞ VE OTURUM KONTROLÜ ---
 if "logged_in" not in st.session_state:
@@ -607,17 +607,15 @@ else:
             st.error("Bu sayfayı görüntüleme yetkiniz yok!")
             st.stop()
             
-        st.title("🤖 Patron Asistanı")
+        st.title("🤖 Yapay Zeka Asistanı")
         
         st.markdown("""
             <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; border-left: 5px solid #0284c7; margin-bottom: 20px;">
-                <h4 style="color: #0284c7 !important; margin-top: 0;">Zaman Bazlı Akıllı Sohbet</h4>
-                <p style="color: #0f172a !important; margin-bottom: 0;">Sisteme zaman belirterek sorular sorabilirsiniz:<br> <i>"Bu ay toplam ciro ne kadar?", "Geçen ay en aktif operatör kim?", "Bugün en çok masraf çıkaran makine hangisi?"</i></p>
             </div>
         """, unsafe_allow_html=True)
         
         if "messages" not in st.session_state:
-            st.session_state.messages = [{"role": "assistant", "content": "Merhaba Patron! Sisteme kayıtlı verilerle ilgili bana dilediğin zamanı belirterek her şeyi sorabilirsin."}]
+            st.session_state.messages = [{"role": "assistant", "content": "Merhaba ! Sisteme kayıtlı verilerle ilgili bana dilediğin zamanı belirterek her şeyi sorabilirsin."}]
             
         for msg in st.session_state.messages:
             if msg["role"] == "user":
