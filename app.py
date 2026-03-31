@@ -48,12 +48,6 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
-    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    .stDeployButton {display:none !important;}
-    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -479,7 +473,7 @@ if not st.session_state.get("logged_in"):
                 else: 
                     st.error("❌ Kullanıcı adı veya şifre hatalı!")
 else:
-    # --- 6. YAN MENÜ (SIDEBAR) ---
+    # --- 6. YAN MENÜ (SIDEBAR) --- KLASİK GÖRÜNÜM
     with st.sidebar:
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, use_container_width=True)
