@@ -24,8 +24,8 @@ from streamlit_lottie import st_lottie
 
 # --- 1. SUPABASE BULUT BAĞLANTISI VE ÇEREZ YÖNETİCİSİ ---
 # BURAYA KENDİ BİLGİLERİNİ GİRMELİSİN EMİR
-SUPABASE_URL = "BURAYA_URL_YAZILACAK"
-SUPABASE_KEY = "BURAYA_ANON_KEY_YAZILACAK"
+SUPABASE_URL = "https://dzkrarizvpuehabjepiy.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6a3Jhcml6dnB1ZWhhYmplcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTgwODUsImV4cCI6MjA5MDUzNDA4NX0.XEAFlH7HMXWHkDOaumKkvTaKfr3LcJNuIdvS281VdhA"
 
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
