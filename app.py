@@ -608,12 +608,7 @@ else:
             st.stop()
             
         st.title("🤖 Yapay Zeka Asistanı")
-        
-        st.markdown("""
-            <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; border-left: 5px solid #0284c7; margin-bottom: 20px;">
-            </div>
-        """, unsafe_allow_html=True)
-        
+
         if "messages" not in st.session_state:
             st.session_state.messages = [{"role": "assistant", "content": "Merhaba ! Sisteme kayıtlı verilerle ilgili bana dilediğin zamanı belirterek her şeyi sorabilirsin."}]
             
