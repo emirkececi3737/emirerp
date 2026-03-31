@@ -21,7 +21,6 @@ from PIL import Image
 from supabase import create_client, Client
 
 # --- 1. SUPABASE BULUT BAĞLANTISI VE ÇEREZ YÖNETİCİSİ ---
-# Şifrelerini senin için doğrudan koda entegre ettim !
 SUPABASE_URL = "https://dzkrarizvpuehabjepiy.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6a3Jhcml6dnB1ZWhhYmplcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTgwODUsImV4cCI6MjA5MDUzNDA4NX0.XEAFlH7HMXWHkDOaumKkvTaKfr3LcJNuIdvS281VdhA"
 
@@ -66,32 +65,56 @@ st.markdown("""
     }
     div[data-testid="stSidebarNav"] { display: none; }
 
-    /* YENİ: OK YERİNE "MENÜ" BUTONU TASARIMI */
-    [data-testid="collapsedControl"] svg {
+    /* YENİ VE KESİN ÇÖZÜM: OK YERİNE "MENÜ" BUTONU TASARIMI */
+    button[kind="header"] svg, 
+    [data-testid="collapsedControl"] svg, 
+    [data-testid="stSidebarCollapsedControl"] svg,
+    button[aria-label="Collapse sidebar"] svg,
+    button[aria-label="Expand sidebar"] svg {
         display: none !important;
     }
-    [data-testid="collapsedControl"] {
+
+    button[kind="header"], 
+    [data-testid="collapsedControl"], 
+    [data-testid="stSidebarCollapsedControl"],
+    button[aria-label="Collapse sidebar"],
+    button[aria-label="Expand sidebar"] {
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
         border-radius: 8px !important;
-        padding: 10px 18px !important;
-        width: auto !important;
-        height: auto !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        width: 100px !important;
+        height: 40px !important;
         margin: 15px !important;
+        color: transparent !important;
+        position: relative !important;
+        border: none !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
         z-index: 999999 !important;
-        transition: 0.3s;
     }
-    [data-testid="collapsedControl"]::after {
+    
+    button[kind="header"]:hover, 
+    [data-testid="collapsedControl"]:hover, 
+    [data-testid="stSidebarCollapsedControl"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+    }
+
+    button[kind="header"]::after, 
+    [data-testid="collapsedControl"]::after, 
+    [data-testid="stSidebarCollapsedControl"]::after,
+    button[aria-label="Collapse sidebar"]::after,
+    button[aria-label="Expand sidebar"]::after {
         content: "☰ MENÜ";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white !important;
         font-family: 'Inter', sans-serif;
         font-weight: 800;
         font-size: 14px;
-        color: white !important;
         letter-spacing: 0.5px;
-    }
-    [data-testid="collapsedControl"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+        visibility: visible !important;
+        display: block !important;
     }
 
     div[data-testid="stMetric"] {
@@ -273,7 +296,6 @@ def send_wa_live_bot(mesaj):
         for abone in aboneler:
             parcalar = abone.split('|')
             if len(parcalar) == 3:
-                # WHATSAPP NUMARA DÜZELTME (+ ve boşluklar temizleniyor)
                 p = str(parcalar[1]).strip().replace(" ", "").replace("+", "")
                 k = str(parcalar[2]).strip()
                 url = f"https://api.callmebot.com/whatsapp.php?phone={p}&text={urllib.parse.quote(mesaj)}&apikey={k}"
@@ -314,7 +336,7 @@ def send_excel_via_email(receiver_email, excel_bytes, filename):
 def akilli_asistan_cevapla(soru, df):
     soru = soru.lower()
     if df.empty: 
-        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor ."
+        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor."
     
     df['Tarih_DT'] = pd.to_datetime(df['Tarih'], errors='coerce')
     bugun = datetime.date.today()
