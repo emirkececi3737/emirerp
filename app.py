@@ -48,12 +48,6 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
-    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    .stDeployButton {display:none !important;}
-    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -191,7 +185,6 @@ def get_supabase_data():
         }
         df = df.rename(columns=rename_map)
         
-        # Eğer buluttaki tabloda henüz saat sütunları yoksa programın çökmemesi için sahte sütunlar ekleyelim
         if "Başlama Saati" not in df.columns: df["Başlama Saati"] = ""
         if "Bitiş Saati" not in df.columns: df["Bitiş Saati"] = ""
         if "Toplam Saat" not in df.columns: df["Toplam Saat"] = 0.0
