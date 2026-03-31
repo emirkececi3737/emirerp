@@ -21,7 +21,7 @@ from PIL import Image
 from supabase import create_client, Client
 
 # --- 1. SUPABASE BULUT BAĞLANTISI VE ÇEREZ YÖNETİCİSİ ---
-# BURAYA KENDİ BİLGİLERİNİ GİRMELİSİN EMİR
+# Şifrelerini senin için doğrudan koda entegre ettim Patron!
 SUPABASE_URL = "https://dzkrarizvpuehabjepiy.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6a3Jhcml6dnB1ZWhhYmplcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTgwODUsImV4cCI6MjA5MDUzNDA4NX0.XEAFlH7HMXWHkDOaumKkvTaKfr3LcJNuIdvS281VdhA"
 
@@ -157,7 +157,6 @@ def get_supabase_data():
         if df.empty:
             return pd.DataFrame(columns=["id", "Tarih", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Ekleyen", "Cihaz", "Fotoğraf"])
         
-        # Buluttaki küçük harfli sütunları programın eski sistemine uygun hale getiriyoruz (Hatasız geçiş için)
         rename_map = {
             "tarih": "Tarih", "firma": "Firma", "makine": "Makine",
             "operator": "Operatör", "fiyat": "Fiyat", "detay": "Detay",
@@ -202,7 +201,7 @@ def show_loader(mesaj="İşlem Yapılıyor..."):
     """
     ph = st.empty()
     ph.markdown(loader_html, unsafe_allow_html=True)
-    time.sleep(1.2)
+    time.sleep(1.0)
     ph.empty()
 
 def log_islem(kullanici, islem):
@@ -235,7 +234,6 @@ def send_wa_live_bot(mesaj):
         df_a = pd.read_csv(S_FILE)
         aboneler = df_a[df_a['tip'] == 'WA_BOT_SUB']['deger'].tolist()
         
-        # Eski sistem uyumluluğu
         p_old_series = df_a[df_a['tip'] == 'BOT_PHONE']['deger']
         k_old_series = df_a[df_a['tip'] == 'BOT_APIKEY']['deger']
         p_old = p_old_series.iloc[0] if not p_old_series.empty else None
@@ -247,18 +245,13 @@ def send_wa_live_bot(mesaj):
         for abone in aboneler:
             parcalar = abone.split('|')
             if len(parcalar) == 3:
-                # Numaradaki boşlukları ve "+" işaretini zorla siliyoruz
+                # WHATSAPP NUMARA DÜZELTME (+ ve boşluklar temizleniyor)
                 p = str(parcalar[1]).strip().replace(" ", "").replace("+", "")
                 k = str(parcalar[2]).strip()
-                
-                # CallMeBot API'sine istek at
                 url = f"https://api.callmebot.com/whatsapp.php?phone={p}&text={urllib.parse.quote(mesaj)}&apikey={k}"
                 res = requests.get(url, timeout=10)
-                
-                # Eğer sunucudan olumsuz yanıt gelirse arka planda uyar
                 if res.status_code != 200:
                     print(f"⚠️ CallMeBot İletim Hatası ({p}): {res.text}")
-                    
     except Exception as e: 
         print(f"🚨 SİSTEM HATASI (WhatsApp Çoklu Bot): {str(e)}")
 
@@ -293,7 +286,7 @@ def send_excel_via_email(receiver_email, excel_bytes, filename):
 def akilli_asistan_cevapla(soru, df):
     soru = soru.lower()
     if df.empty: 
-        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor ."
+        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor patron."
     
     df['Tarih_DT'] = pd.to_datetime(df['Tarih'], errors='coerce')
     bugun = datetime.date.today()
@@ -334,7 +327,7 @@ def akilli_asistan_cevapla(soru, df):
         son = df.iloc[-1]
         return f"📅 Son işlem: **{son['Firma']}** firmasına **{son['Operatör']}** tarafından **{son['Makine']}** için yapılmış. Tutar: {son['Fiyat']} TL."
     else:
-        return "🤖 Üzgünüm , anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
+        return "🤖 Üzgünüm patron, anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
 
 # --- 5. GİRİŞ VE OTURUM KONTROLÜ ---
 if "logged_in" not in st.session_state:
@@ -460,7 +453,7 @@ if not st.session_state.get("logged_in"):
                 else: 
                     st.error("❌ Kullanıcı adı veya şifre hatalı!")
 else:
-    # --- 6. YAN MENÜ (SIDEBAR) ---
+    # --- 6. YAN MENÜ (SIDEBAR) --- KLASİK GÖRÜNÜM
     with st.sidebar:
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, use_container_width=True)
@@ -611,6 +604,7 @@ else:
                         time.sleep(0.5)
                         st.rerun()
             else:
+                st.info("💡 Notları görüntüleme yetkiniz var ancak düzenleme yetkiniz bulunmuyor.")
                 st.markdown(f"<div class='readonly-box'>{note_content}</div>", unsafe_allow_html=True)
 
     # ================= AKILLI ASİSTAN =================
@@ -620,7 +614,14 @@ else:
             st.stop()
             
         st.title("🤖 Yapay Zeka Asistanı")
-
+        
+        st.markdown("""
+            <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; border-left: 5px solid #0284c7; margin-bottom: 20px;">
+                <h4 style="color: #0284c7 !important; margin-top: 0;">Zaman Bazlı Akıllı Sohbet</h4>
+                <p style="color: #0f172a !important; margin-bottom: 0;">Sisteme zaman belirterek sorular sorabilirsiniz:<br> <i>"Bu ay toplam ciro ne kadar?", "Geçen ay en aktif operatör kim?", "Bugün en çok masraf çıkaran makine hangisi?"</i></p>
+            </div>
+        """, unsafe_allow_html=True)
+        
         if "messages" not in st.session_state:
             st.session_state.messages = [{"role": "assistant", "content": "Merhaba ! Sisteme kayıtlı verilerle ilgili bana dilediğin zamanı belirterek her şeyi sorabilirsin."}]
             
