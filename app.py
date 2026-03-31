@@ -104,8 +104,30 @@ st.markdown("""
         padding: 40px; border-radius: 15px; color: white !important; margin-bottom: 30px;
     }
     .customer-hero h1, .customer-hero p { color: white !important; }
+    
+    /* SAĞ ALT SABİT TELİF YAZISI */
+    .floating-copyright {
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        background-color: rgba(255, 255, 255, 0.85);
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        z-index: 999999;
+        backdrop-filter: blur(5px);
+        font-family: 'Inter', sans-serif;
+        pointer-events: none;
+    }
     </style>
     """, unsafe_allow_html=True)
+
+# Ekranda sağ altta sürekli kalacak olan Telif Yazısı
+st.markdown("<div class='floating-copyright'>© 2026 EMİR ERP. Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
 
 # --- 3. YEREL SİSTEM DOSYALARI (AYARLAR VE LOGLAR İÇİN) ---
 U_FILE = "users.csv"
@@ -457,7 +479,7 @@ if not st.session_state.get("logged_in"):
                 else: 
                     st.error("❌ Kullanıcı adı veya şifre hatalı!")
 else:
-    # --- 6. YAN MENÜ (SIDEBAR) --- KLASİK GÖRÜNÜM
+    # --- 6. YAN MENÜ (SIDEBAR) ---
     with st.sidebar:
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, use_container_width=True)
@@ -519,6 +541,9 @@ else:
             cookies.save()
             st.session_state["logged_in"] = False
             st.rerun()
+            
+        # Sol Menü Alt Kısmı Telif Yazısı
+        st.markdown("<br><br><br><div style='text-align: center; color: #94a3b8; font-size: 11px; padding-bottom: 20px;'>© 2026 EMİR ERP.<br>Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
 
         if st.session_state.get("kapat", False):
             components.html("""
