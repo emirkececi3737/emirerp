@@ -21,7 +21,7 @@ from PIL import Image
 from supabase import create_client, Client
 
 # --- 1. SUPABASE BULUT BAĞLANTISI VE ÇEREZ YÖNETİCİSİ ---
-# Şifrelerini senin için doğrudan koda entegre ettim Patron!
+# Şifrelerini senin için doğrudan koda entegre ettim !
 SUPABASE_URL = "https://dzkrarizvpuehabjepiy.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6a3Jhcml6dnB1ZWhhYmplcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTgwODUsImV4cCI6MjA5MDUzNDA4NX0.XEAFlH7HMXWHkDOaumKkvTaKfr3LcJNuIdvS281VdhA"
 
@@ -286,7 +286,7 @@ def send_excel_via_email(receiver_email, excel_bytes, filename):
 def akilli_asistan_cevapla(soru, df):
     soru = soru.lower()
     if df.empty: 
-        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor patron."
+        return "Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor ."
     
     df['Tarih_DT'] = pd.to_datetime(df['Tarih'], errors='coerce')
     bugun = datetime.date.today()
@@ -327,7 +327,7 @@ def akilli_asistan_cevapla(soru, df):
         son = df.iloc[-1]
         return f"📅 Son işlem: **{son['Firma']}** firmasına **{son['Operatör']}** tarafından **{son['Makine']}** için yapılmış. Tutar: {son['Fiyat']} TL."
     else:
-        return "🤖 Üzgünüm patron, anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
+        return "🤖 Üzgünüm , anlayamadım. Zaman ekleyerek ciro, firma veya aktif operatörleri sorabilirsin."
 
 # --- 5. GİRİŞ VE OTURUM KONTROLÜ ---
 if "logged_in" not in st.session_state:
@@ -616,8 +616,7 @@ else:
         st.title("🤖 Yapay Zeka Asistanı")
         
         st.markdown("""
-            <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; border-left: 5px solid #0284c7; margin-bottom: 20px;">
-                <h4 style="color: #0284c7 !important; margin-top: 0;">Zaman Bazlı Akıllı Sohbet</h4>
+
                 <p style="color: #0f172a !important; margin-bottom: 0;">Sisteme zaman belirterek sorular sorabilirsiniz:<br> <i>"Bu ay toplam ciro ne kadar?", "Geçen ay en aktif operatör kim?", "Bugün en çok masraf çıkaran makine hangisi?"</i></p>
             </div>
         """, unsafe_allow_html=True)
