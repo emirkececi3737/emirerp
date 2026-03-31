@@ -1,0 +1,10 @@
+streamlit
+pandas
+supabase
+streamlit-cookies-manager
+user-agents
+streamlit-quill
+plotly
+requests
+pillow
+openpyxl
