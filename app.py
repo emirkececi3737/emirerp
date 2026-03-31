@@ -65,56 +65,23 @@ st.markdown("""
     }
     div[data-testid="stSidebarNav"] { display: none; }
 
-    /* YENİ VE KESİN ÇÖZÜM: OK YERİNE "MENÜ" BUTONU TASARIMI */
-    button[kind="header"] svg, 
-    [data-testid="collapsedControl"] svg, 
-    [data-testid="stSidebarCollapsedControl"] svg,
-    button[aria-label="Collapse sidebar"] svg,
-    button[aria-label="Expand sidebar"] svg {
+    /* SADECE SOL ÜSTTEKİ YAN MENÜYÜ AÇMA BUTONU */
+    [data-testid="collapsedControl"] svg {
         display: none !important;
     }
-
-    button[kind="header"], 
-    [data-testid="collapsedControl"], 
-    [data-testid="stSidebarCollapsedControl"],
-    button[aria-label="Collapse sidebar"],
-    button[aria-label="Expand sidebar"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    [data-testid="collapsedControl"]::after {
+        content: "☰ MENÜ" !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        color: #2563eb !important;
+        background-color: #e0f2fe !important;
+        padding: 8px 15px !important;
         border-radius: 8px !important;
-        width: 100px !important;
-        height: 40px !important;
-        margin: 15px !important;
-        color: transparent !important;
-        position: relative !important;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-        z-index: 999999 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
-    
-    button[kind="header"]:hover, 
-    [data-testid="collapsedControl"]:hover, 
-    [data-testid="stSidebarCollapsedControl"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
-    }
-
-    button[kind="header"]::after, 
-    [data-testid="collapsedControl"]::after, 
-    [data-testid="stSidebarCollapsedControl"]::after,
-    button[aria-label="Collapse sidebar"]::after,
-    button[aria-label="Expand sidebar"]::after {
-        content: "☰ MENÜ";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white !important;
-        font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        font-size: 14px;
-        letter-spacing: 0.5px;
-        visibility: visible !important;
-        display: block !important;
+    [data-testid="collapsedControl"]:hover::after {
+        background-color: #bae6fd !important;
     }
 
     div[data-testid="stMetric"] {
