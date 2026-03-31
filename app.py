@@ -127,7 +127,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Ekranda sağ altta sürekli kalacak olan Telif Yazısı
-st.markdown("<div class='floating-copyright'>© 2026 EMİR ERP. Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
+st.markdown("<div class='floating-copyright'>© 2026 Yapıkur ERP. Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
 
 # --- 3. YEREL SİSTEM DOSYALARI (AYARLAR VE LOGLAR İÇİN) ---
 U_FILE = "users.csv"
@@ -543,7 +543,7 @@ else:
             st.rerun()
             
         # Sol Menü Alt Kısmı Telif Yazısı
-        st.markdown("<br><br><br><div style='text-align: center; color: #94a3b8; font-size: 11px; padding-bottom: 20px;'>© 2026 EMİR ERP.<br>Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
+        st.markdown("<br><br><br><div style='text-align: center; color: #94a3b8; font-size: 11px; padding-bottom: 20px;'>© 2026 Yapıkur ERP.<br>Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
 
         if st.session_state.get("kapat", False):
             components.html("""
