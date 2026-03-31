@@ -611,7 +611,6 @@ else:
                         time.sleep(0.5)
                         st.rerun()
             else:
-                st.info("💡 Notları görüntüleme yetkiniz var ancak düzenleme yetkiniz bulunmuyor.")
                 st.markdown(f"<div class='readonly-box'>{note_content}</div>", unsafe_allow_html=True)
 
     # ================= AKILLI ASİSTAN =================
