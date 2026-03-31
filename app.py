@@ -46,6 +46,65 @@ st.set_page_config(page_title="EMİR ERP", page_icon=page_icon_val, layout="wide
 if "choice" not in st.session_state:
     st.session_state["choice"] = "🏠 Dashboard"
 
+# --- 2.1 İNATÇI OKU EZEN JAVASCRIPT BALYOZU (YENİ) ---
+components.html("""
+    <script>
+        var doc = window.parent.document;
+        if (!doc.getElementById("menu-css-ezici")) {
+            var style = doc.createElement('style');
+            style.id = "menu-css-ezici";
+            style.innerHTML = `
+                /* Ok Simgelerini Tamamen Yok Et */
+                [data-testid="collapsedControl"] svg,
+                [data-testid="stSidebarCollapsedControl"] svg,
+                button[aria-label="Expand sidebar"] svg {
+                    display: none !important;
+                }
+                
+                /* Butonun Yeni Boyutları ve Tasarımı */
+                [data-testid="collapsedControl"],
+                [data-testid="stSidebarCollapsedControl"],
+                button[aria-label="Expand sidebar"] {
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+                    border-radius: 8px !important;
+                    padding: 5px 15px !important;
+                    width: auto !important;
+                    height: 40px !important;
+                    margin: 15px !important;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    transition: all 0.3s ease !important;
+                    border: none !important;
+                }
+
+                /* İçine "MENÜ" Yazısını Ekle */
+                [data-testid="collapsedControl"]::after,
+                [data-testid="stSidebarCollapsedControl"]::after,
+                button[aria-label="Expand sidebar"]::after {
+                    content: "☰ MENÜ" !important;
+                    color: white !important;
+                    font-family: 'Inter', sans-serif !important;
+                    font-weight: 800 !important;
+                    font-size: 14px !important;
+                    letter-spacing: 0.5px !important;
+                    display: block !important;
+                }
+
+                /* Fare Üstüne Gelinceki Animasyon */
+                [data-testid="collapsedControl"]:hover,
+                [data-testid="stSidebarCollapsedControl"]:hover,
+                button[aria-label="Expand sidebar"]:hover {
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+                }
+            `;
+            doc.head.appendChild(style);
+        }
+    </script>
+""", height=0, width=0)
+
 st.markdown("""
     <style>
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
@@ -64,25 +123,6 @@ st.markdown("""
         color: #2563eb !important; transform: translateY(-2px);
     }
     div[data-testid="stSidebarNav"] { display: none; }
-
-    /* SADECE SOL ÜSTTEKİ YAN MENÜYÜ AÇMA BUTONU */
-    [data-testid="collapsedControl"] svg {
-        display: none !important;
-    }
-    [data-testid="collapsedControl"]::after {
-        content: "☰ MENÜ" !important;
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 800 !important;
-        font-size: 14px !important;
-        color: #2563eb !important;
-        background-color: #e0f2fe !important;
-        padding: 8px 15px !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    }
-    [data-testid="collapsedControl"]:hover::after {
-        background-color: #bae6fd !important;
-    }
 
     div[data-testid="stMetric"] {
         background-color: #ffffff !important; border: 1px solid #e2e8f0 !important;
