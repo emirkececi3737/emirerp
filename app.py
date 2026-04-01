@@ -44,7 +44,7 @@ else:
 st.set_page_config(page_title="EMİR ERP", page_icon=page_icon_val, layout="wide")
 
 if "choice" not in st.session_state:
-    st.session_state["choice"] = "🏠 Dashboard"
+    st.session_state["choice"] = "🏠 Ana Menü"
 
 st.markdown("""
     <style>
@@ -523,7 +523,7 @@ if not st.session_state.get("logged_in"):
                         "can_view_ticker": bool(r.get("can_view_ticker", True)),
                         "is_cust": bool(r.get("is_customer", False)), 
                         "cust_firm": str(r.get("customer_firm", "")), 
-                        "choice": "🏠 Dashboard"
+                        "choice": "🏠 Ana Menü"
                     })
                     st.rerun()
                 else: 
@@ -542,15 +542,15 @@ else:
         if st.session_state.get("is_cust", False):
             if st.button("🏠 Müşteri Panosu", use_container_width=True, key="btn_cust_dash"):
                 show_loader("Pano Yükleniyor...")
-                st.session_state["choice"] = "🏠 Dashboard"
+                st.session_state["choice"] = "🏠 Ana Menü"
                 st.session_state["kapat"] = True
                 st.rerun()
             st.info(f"📍 Bağlı Firma: {st.session_state['cust_firm']}")
             
         else:
-            if st.button("🏠 Dashboard", use_container_width=True, key="btn_dash"):
-                show_loader("Dashboard Yükleniyor...")
-                st.session_state["choice"] = "🏠 Dashboard"
+            if st.button("🏠 Ana Menü", use_container_width=True, key="btn_dash"):
+                show_loader("Ana Menü Yükleniyor...")
+                st.session_state["choice"] = "🏠 Ana Menü"
                 st.session_state["kapat"] = True
                 st.rerun()
                 
@@ -611,7 +611,7 @@ else:
     choice = st.session_state["choice"]
     
     # ================= DASHBOARD (MÜŞTERİ VE PERSONEL GÖRÜNÜMÜ) =================
-    if choice == "🏠 Dashboard":
+    if choice == "🏠 Ana Menü":
         if st.session_state.get("is_cust", False):
             firm_name = st.session_state["cust_firm"]
             st.markdown(f"""
@@ -663,7 +663,7 @@ else:
                 st.info("Sistemde firmanıza ait henüz bir kayıt bulunmuyor.")
 
         else:
-            st.title("🏠 Dashboard")
+            st.title("🏠 Ana Menü")
             
             # --- DEVAM EDEN İŞLER (CANLI SAYAÇ) ---
             df_devam = pd.read_csv(D_FILE)
@@ -762,10 +762,10 @@ else:
                 if st.button("💾 Notları Kaydet", key="btn_not_kaydet"):
                     if new_notes is not None:
                         show_loader("Notlar Kaydediliyor...")
-                        log_islem(st.session_state['user'], "Dashboard Notlarını Güncelledi")
+                        log_islem(st.session_state['user'], "Ana Menü Notlarını Güncelledi")
                         with open(N_FILE, "w", encoding="utf-8") as f: 
                             f.write(new_notes)
-                        st.success("✅ Dashboard notları başarıyla güncellendi.")
+                        st.success("✅ Ana Menü notları başarıyla güncellendi.")
                         time.sleep(0.5)
                         st.rerun()
             else:
@@ -829,7 +829,7 @@ else:
         
         # 1. SEKME: CANLI İŞ BAŞLATMA
         with tab_canli:
-            st.info("💡 Buradan başlattığınız işler, arka planda sayacı çalıştırır ve Dashboard'daki 'Devam Eden İşlerim' bölümüne düşer. Mola verdiğinizde süre durur, işi bitirdiğinizde net saat hesaplanıp buluta gönderilir.")
+            st.info("💡 Buradan başlattığınız işler, arka planda sayacı çalıştırır ve Ana Menü'deki 'Devam Eden İşlerim' bölümüne düşer. Mola verdiğinizde süre durur, işi bitirdiğinizde net saat hesaplanıp buluta gönderilir.")
             
             with st.form("canli_baslat_form", clear_on_submit=True):
                 col_c1, col_c2 = st.columns(2)
@@ -872,7 +872,7 @@ else:
                     pd.concat([df_devam, yeni_is]).to_csv(D_FILE, index=False)
                     
                     log_islem(st.session_state['user'], f"Canlı İş Başlattı: {c_firma}")
-                    st.success("✅ İş başlatıldı! Dashboard üzerinden sayacı kontrol edebilirsiniz.")
+                    st.success("✅ İş başlatıldı! Ana Menü üzerinden sayacı kontrol edebilirsiniz.")
 
         # 2. SEKME: MANUEL GEÇMİŞ İŞ GİRİŞİ
         with tab_manuel:
@@ -1171,7 +1171,7 @@ else:
                             st.markdown("---")
                             st.markdown("**Personel Yetkileri (Müşterilerde geçersizdir):**")
                             e_rep = st.checkbox("Finansal Raporları Görebilir", value=bool(user_row['can_view_reports']))
-                            e_dash = st.checkbox("Dashboard Notlarını Düzenleyebilir", value=bool(user_row.get('can_edit_dashboard', False)))
+                            e_dash = st.checkbox("Ana Menü Notlarını Düzenleyebilir", value=bool(user_row.get('can_edit_dashboard', False)))
                             e_ai = st.checkbox("Akıllı Asistanı Kullanabilir", value=bool(user_row.get('can_use_assistant', False)))
                             e_ticker = st.checkbox("Canlı Bilgi Göstergesini (Sağ Üst) Görebilir", value=bool(user_row.get('can_view_ticker', True)))
                             e_adm = st.checkbox("Yönetici Yetkisi", value=bool(user_row['can_manage_admin']), disabled=(user_row['username']=='admin'))
@@ -1211,7 +1211,7 @@ else:
                     st.markdown("---")
                     st.markdown("**Personel İçin Yetkiler:**")
                     yr = st.checkbox("Finansal Rapor Görüntüleme")
-                    yd = st.checkbox("Dashboard Notu Düzenleme")
+                    yd = st.checkbox("Ana Menü Notu Düzenleme")
                     y_ai = st.checkbox("Akıllı Asistan Yetkisi")
                     y_tick = st.checkbox("Canlı Bilgi Göstergesi Yetkisi", value=True)
                     ya = st.checkbox("Admin Yetkisi")
