@@ -166,13 +166,13 @@ def setup():
             "can_edit_dashboard": True,
             "can_use_assistant": True,
             "can_view_ticker": True,
-            "can_view_all_tasks": True,  # YENİ YETKİ
+            "can_view_all_tasks": True,
             "is_customer": False,
             "customer_firm": ""
         }]).to_csv(U_FILE, index=False)
     
     u_df = pd.read_csv(U_FILE)
-    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker", "can_view_all_tasks"] # YENİ YETKİ EKLENDİ
+    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker", "can_view_all_tasks"]
     updated = False
     for c in cols:
         if c not in u_df.columns:
@@ -418,7 +418,7 @@ if "logged_in" not in st.session_state:
                 "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
                 "can_use_ai": bool(r.get("can_use_assistant", False)), 
                 "can_view_ticker": bool(r.get("can_view_ticker", True)),
-                "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), # YENİ EKLENDİ
+                "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), 
                 "is_cust": bool(r.get("is_customer", False)), 
                 "cust_firm": str(r.get("customer_firm", ""))
             })
@@ -523,7 +523,7 @@ if not st.session_state.get("logged_in"):
                         "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
                         "can_use_ai": bool(r.get("can_use_assistant", False)), 
                         "can_view_ticker": bool(r.get("can_view_ticker", True)),
-                        "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), # YENİ EKLENDİ
+                        "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), 
                         "is_cust": bool(r.get("is_customer", False)), 
                         "cust_firm": str(r.get("customer_firm", "")), 
                         "choice": "🏠 Ana Menü"
@@ -727,7 +727,6 @@ else:
                             
                         toplam_saat = round(final_saniye / 3600, 2)
                         
-                        # NAN KORUMALI PAYLOAD YÜKLEMESİ VE FİYAT GİZLİLİĞİ
                         detay_metni = str(row['Detay']) if pd.notna(row['Detay']) else ""
                         foto_yolu = str(row['Foto_Yolu']) if pd.notna(row['Foto_Yolu']) else ""
                         
@@ -736,14 +735,14 @@ else:
                             "firma": str(row['Firma']),
                             "makine": str(row['Makine']),
                             "operator": str(row['Operatör']),
-                            "fiyat": 0.0,  # Fiyat kaldırıldı, varsayılan 0
+                            "fiyat": 0.0,
                             "detay": detay_metni,
                             "baslama_tarihi": str(ilk_bas.date()),
                             "bitis_tarihi": str(now.date()),
                             "baslama_saati": str(ilk_bas.time())[:5],
                             "bitis_saati": str(now.time())[:5],
                             "toplam_saat": float(toplam_saat),
-                            "ekleyen": row['Ekleyen'], # Kendi oturumumuz değil, işi başlatanın adıyla kaydederiz
+                            "ekleyen": row['Ekleyen'], 
                             "cihaz": get_device_info(),
                             "fotograf": foto_yolu
                         }
@@ -871,7 +870,7 @@ else:
                         "Firma": c_firma, 
                         "Makine": c_makine, 
                         "Operatör": c_op, 
-                        "Fiyat": 0.0, # Fiyat kaldırıldı
+                        "Fiyat": 0.0, 
                         "Detay": c_detay if c_detay else "", 
                         "Foto_Yolu": foto_yolu,
                         "Durum": "Çalışıyor", 
@@ -931,13 +930,12 @@ else:
 
                     cihaz_bilgisi = get_device_info()
                     
-                    # NAN KORUMALI MANUEL PAYLOAD
                     payload = {
                         "tarih": str(secilen_tarih),
                         "firma": secilen_firma,
                         "makine": secilen_makine,
                         "operator": secilen_operator,
-                        "fiyat": 0.0, # Fiyat kaldırıldı
+                        "fiyat": 0.0, 
                         "detay": girilen_detay if girilen_detay else "",
                         "baslama_tarihi": str(bas_tarihi),
                         "bitis_tarihi": str(bit_tarihi),
@@ -1055,7 +1053,6 @@ else:
             output = io.BytesIO()
             df_export = df_filtered.drop(columns=['Tarih_DT', 'id', 'Fotoğraf', 'Fiyat'], errors='ignore')
             
-            # --- EXCELE ÖZEL BOŞ TUTAR SÜTUNU ---
             df_export['Tutar (Manuel Girilecek)'] = ""
             
             istenen_sira = ['Tarih', 'Başlama Tarihi', 'Başlama Saati', 'Bitiş Tarihi', 'Bitiş Saati', 'Toplam Saat', 'Firma', 'Makine', 'Operatör', 'Tutar (Manuel Girilecek)', 'Detay', 'Ekleyen', 'Cihaz']
@@ -1151,13 +1148,94 @@ else:
         else:
             st.info("Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor.")
 
-    # ================= YÖNETİM PANELİ =================
+    # ================= YÖNETİM PANELİ (PROGRAM AYARLARI BURAYA EKLENDİ) =================
     elif choice == "⚙️ Yönetim Paneli":
         st.title("⚙️ Sistem Yönetimi")
-        tab_users, tab_operators, tab_firms, tab_machines, tab_bot, tab_email, tab_logs = st.tabs([
-            "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları"
+        
+        # SIFIRLAMA FONKSİYONLARI
+        def reset_users_func():
+            pd.DataFrame([{
+                "username": "admin", "password": "123", "can_view_reports": True,
+                "can_manage_admin": True, "can_edit_dashboard": True,
+                "can_use_assistant": True, "can_view_ticker": True, "can_view_all_tasks": True,
+                "is_customer": False, "customer_firm": ""
+            }]).to_csv(U_FILE, index=False)
+            log_islem(st.session_state['user'], "Sistem Kullanıcılarını Sıfırladı")
+
+        def reset_op_func():
+            df_a = pd.read_csv(S_FILE)
+            df_a = df_a[df_a['tip'] != 'Operatör']
+            df_a.to_csv(S_FILE, index=False)
+            log_islem(st.session_state['user'], "Operatör Listesini Sıfırladı")
+
+        def reset_firm_func():
+            df_a = pd.read_csv(S_FILE)
+            df_a = df_a[df_a['tip'] != 'Firma']
+            df_a.to_csv(S_FILE, index=False)
+            log_islem(st.session_state['user'], "Firma Listesini Sıfırladı")
+
+        def reset_mac_func():
+            df_a = pd.read_csv(S_FILE)
+            df_a = df_a[df_a['tip'] != 'Makine']
+            df_a.to_csv(S_FILE, index=False)
+            log_islem(st.session_state['user'], "Makine Listesini Sıfırladı")
+
+        def reset_rep_func():
+            try:
+                supabase.table("satislar").delete().neq("id", "0").execute()
+            except Exception as e:
+                print("Supabase silme hatasi:", e)
+            pd.DataFrame(columns=["id", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Foto_Yolu", "Durum", "Ilk_Baslama", "Son_Baslama", "Birikmis_Saniye", "Ekleyen"]).to_csv(D_FILE, index=False)
+            log_islem(st.session_state['user'], "Tüm Servis Raporlarını Sıfırladı")
+
+        def reset_all_func():
+            reset_users_func()
+            reset_op_func()
+            reset_firm_func()
+            reset_mac_func()
+            reset_rep_func()
+            pd.DataFrame(columns=["Tarih", "Saat", "Kullanıcı", "İşlem", "Cihaz"]).to_csv(L_FILE, index=False)
+            with open(N_FILE, "w", encoding="utf-8") as f:
+                f.write("<h2>Yönetici Notları</h2>")
+            df_a = pd.read_csv(S_FILE)
+            df_a = df_a[df_a['tip'].isin(['EMAIL_ADDR', 'EMAIL_PASS', 'WA_BOT_SUB', 'BOT_PHONE', 'BOT_APIKEY'])]
+            df_a.to_csv(S_FILE, index=False)
+            log_islem(st.session_state['user'], "SİSTEMİ TAMAMEN FABRİKA AYARLARINA SIFIRLADI")
+        
+        # TABLARIN OLUŞTURULMASI (Program Ayarları ilk sıraya alındı)
+        tab_settings, tab_users, tab_operators, tab_firms, tab_machines, tab_bot, tab_email, tab_logs = st.tabs([
+            "⚙️ Program Ayarları", "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları"
         ])
         
+        # --- YENİ EKLENEN PROGRAM AYARLARI SEKME İÇERİĞİ ---
+        with tab_settings:
+            st.subheader("⚠️ Kritik Sistem Sıfırlama İşlemleri")
+            st.error("DİKKAT! Bu alandaki işlemler geri alınamaz. Yanlışlıkla silinmeleri önlemek için her işlem iki aşamalı onay (çift tik) gerektirir.")
+            
+            col_rs1, col_rs2 = st.columns(2)
+            
+            def render_reset_card(col, title, key_prefix, warning_text, btn_text, action_func):
+                with col.container():
+                    st.markdown(f"#### {title}")
+                    c1 = st.checkbox(f"1. Onay: İşlemin kalıcı olduğunu kabul ediyorum.", key=f"{key_prefix}_1")
+                    c2 = st.checkbox(f"2. Onay: {warning_text}", key=f"{key_prefix}_2")
+                    if st.button(btn_text, disabled=not (c1 and c2), key=f"{key_prefix}_btn", use_container_width=True):
+                        show_loader(f"{title} işlemi yapılıyor...")
+                        action_func()
+                        st.success(f"✅ {title} başarıyla tamamlandı.")
+                        time.sleep(1)
+                        st.rerun()
+                    st.divider()
+
+            render_reset_card(col_rs1, "👤 Kullanıcıları Sıfırla", "rst_usr", "Tüm kullanıcıların (Admin hariç) silineceğini onaylıyorum.", "Kullanıcıları Sıfırla", reset_users_func)
+            render_reset_card(col_rs1, "👷 Operatörleri Sıfırla", "rst_op", "Kayıtlı tüm operatörlerin silineceğini onaylıyorum.", "Operatörleri Sıfırla", reset_op_func)
+            render_reset_card(col_rs1, "🚜 Makineleri Sıfırla", "rst_mac", "Kayıtlı tüm makinelerin silineceğini onaylıyorum.", "Makineleri Sıfırla", reset_mac_func)
+
+            render_reset_card(col_rs2, "📊 Raporları Sıfırla", "rst_rep", "Buluttaki tüm servis kayıtlarının silineceğini onaylıyorum.", "Raporları Sıfırla", reset_rep_func)
+            render_reset_card(col_rs2, "🏢 Firmaları Sıfırla", "rst_firm", "Kayıtlı tüm firmaların silineceğini onaylıyorum.", "Firmaları Sıfırla", reset_firm_func)
+            render_reset_card(col_rs2, "💥 TÜM SİSTEMİ SIFIRLA", "rst_all", "Kayıtların, listelerin, logların ve notların TAMAMEN silineceğini onaylıyorum.", "Tüm Sistemi Fabrika Ayarlarına Döndür", reset_all_func)
+        # ---------------------------------------------------
+
         with tab_users:
             users_db = pd.read_csv(U_FILE)
             firma_secenekleri = [""] + get_list("Firma")
@@ -1187,10 +1265,7 @@ else:
                             e_dash = st.checkbox("Ana Menü Notlarını Düzenleyebilir", value=bool(user_row.get('can_edit_dashboard', False)))
                             e_ai = st.checkbox("Akıllı Asistanı Kullanabilir", value=bool(user_row.get('can_use_assistant', False)))
                             e_ticker = st.checkbox("Canlı Bilgi Göstergesini (Sağ Üst) Görebilir", value=bool(user_row.get('can_view_ticker', True)))
-                            
-                            # YENİ EKLENEN YETKİ (MEVCUT KULLANICI DÜZENLEME)
                             e_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)", value=bool(user_row.get('can_view_all_tasks', False)))
-                            
                             e_adm = st.checkbox("Yönetici Yetkisi", value=bool(user_row['can_manage_admin']), disabled=(user_row['username']=='admin'))
                             
                             if st.form_submit_button("🔄 Yetkileri Güncelle"):
@@ -1202,7 +1277,7 @@ else:
                                 users_db.at[idx, 'can_edit_dashboard'] = e_dash
                                 users_db.at[idx, 'can_use_assistant'] = e_ai
                                 users_db.at[idx, 'can_view_ticker'] = e_ticker
-                                users_db.at[idx, 'can_view_all_tasks'] = e_view_all # YENİ YETKİ KAYDI
+                                users_db.at[idx, 'can_view_all_tasks'] = e_view_all 
                                 if user_row['username'] != 'admin': 
                                     users_db.at[idx, 'can_manage_admin'] = e_adm
                                 users_db.to_csv(U_FILE, index=False)
@@ -1232,10 +1307,7 @@ else:
                     yd = st.checkbox("Ana Menü Notu Düzenleme")
                     y_ai = st.checkbox("Akıllı Asistan Yetkisi")
                     y_tick = st.checkbox("Canlı Bilgi Göstergesi Yetkisi", value=True)
-                    
-                    # YENİ EKLENEN YETKİ (YENİ KULLANICI)
                     y_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)")
-                    
                     ya = st.checkbox("Admin Yetkisi")
                     
                     if st.form_submit_button("Sisteme Kaydet"):
@@ -1248,7 +1320,7 @@ else:
                             "can_edit_dashboard": yd, 
                             "can_use_assistant": y_ai,
                             "can_view_ticker": y_tick,
-                            "can_view_all_tasks": y_view_all, # YENİ YETKİ KAYDI
+                            "can_view_all_tasks": y_view_all, 
                             "is_customer": y_cust, 
                             "customer_firm": y_cust_firm if y_cust else ""
                         }])
