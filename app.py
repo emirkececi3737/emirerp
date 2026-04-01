@@ -652,7 +652,7 @@ else:
                     now = datetime.datetime.now()
                     ilk_bas = datetime.datetime.fromisoformat(row['Ilk_Baslama'])
                     son_bas = datetime.datetime.fromisoformat(row['Son_Baslama'])
-                    birikmis = float(row['Birikmis_Saniye'])
+                    birikmis = float(row['Birikmis_Saniye']) if pd.notna(row['Birikmis_Saniye']) else 0.0
                     
                     if row['Durum'] == "Çalışıyor":
                         guncel_birikmis = birikmis + (now - son_bas).total_seconds()
@@ -690,13 +690,18 @@ else:
                             
                         toplam_saat = round(final_saniye / 3600, 2)
                         
+                        # NAN KORUMALI PAYLOAD YÜKLEMESİ
+                        detay_metni = str(row['Detay']) if pd.notna(row['Detay']) else ""
+                        foto_yolu = str(row['Foto_Yolu']) if pd.notna(row['Foto_Yolu']) else ""
+                        fiyat_degeri = float(row['Fiyat']) if pd.notna(row['Fiyat']) else 0.0
+                        
                         payload = {
                             "tarih": str(now.date()),
-                            "firma": row['Firma'],
-                            "makine": row['Makine'],
-                            "operator": row['Operatör'],
-                            "fiyat": float(row['Fiyat']),
-                            "detay": row['Detay'],
+                            "firma": str(row['Firma']),
+                            "makine": str(row['Makine']),
+                            "operator": str(row['Operatör']),
+                            "fiyat": fiyat_degeri,
+                            "detay": detay_metni,
                             "baslama_tarihi": str(ilk_bas.date()),
                             "bitis_tarihi": str(now.date()),
                             "baslama_saati": str(ilk_bas.time())[:5],
@@ -704,7 +709,7 @@ else:
                             "toplam_saat": float(toplam_saat),
                             "ekleyen": st.session_state["user"],
                             "cihaz": get_device_info(),
-                            "fotograf": row['Foto_Yolu']
+                            "fotograf": foto_yolu
                         }
                         
                         try:
@@ -713,7 +718,7 @@ else:
                             df_devam.to_csv(D_FILE, index=False)
                             
                             log_islem(st.session_state['user'], f"Canlı İş Bitirdi: {row['Firma']}")
-                            send_wa_live_bot(f"🚨 *YAPIKUR ERP - CANLI İŞ TAMAMLANDI*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {row['Firma']}\n🚜 Makine: {row['Makine']}\n👷 Operatör: {row['Operatör']}\n⏱️ Toplam Çalışma: {toplam_saat} Saat\n💰 Tutar: {row['Fiyat']:,.2f} TL\n📝 İşlem: {row['Detay']}")
+                            send_wa_live_bot(f"🚨 *YAPIKUR ERP - CANLI İŞ TAMAMLANDI*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {row['Firma']}\n🚜 Makine: {row['Makine']}\n👷 Operatör: {row['Operatör']}\n⏱️ Toplam Çalışma: {toplam_saat} Saat\n💰 Tutar: {fiyat_degeri:,.2f} TL\n📝 İşlem: {detay_metni}")
                             st.success("İş başarıyla tamamlandı ve raporlara işlendi!")
                             time.sleep(1)
                             st.rerun()
@@ -853,7 +858,6 @@ else:
                 bit_tarihi = col_d2.date_input("📅 İşin Bitiş Tarihi", key="kayit_bit_tarih")
                 
                 col_t1, col_t2 = st.columns(2)
-                # MOBİL HATASINI ÖNLEYEN SELECTBOX YAPISI
                 bas_saati_str = col_t1.selectbox("⏰ İşe Başlama Saati", saat_secenekleri, index=saat_secenekleri.index("08:00"), key="kayit_bas_saati")
                 bit_saati_str = col_t2.selectbox("🏁 İşin Bitiş Saati", saat_secenekleri, index=saat_secenekleri.index("17:00"), key="kayit_bit_saati")
                 st.markdown("---")
@@ -864,7 +868,6 @@ else:
                 if st.form_submit_button("✅ GEÇMİŞ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
                     
-                    # Saat ve Tarih Hesaplaması
                     bh, bm = map(int, bas_saati_str.split(':'))
                     bih, bim = map(int, bit_saati_str.split(':'))
                     start_dt = datetime.datetime.combine(bas_tarihi, datetime.time(bh, bm))
@@ -884,13 +887,15 @@ else:
                             f.write(secilen_foto.getbuffer())
 
                     cihaz_bilgisi = get_device_info()
+                    
+                    # NAN KORUMALI MANUEL PAYLOAD
                     payload = {
                         "tarih": str(secilen_tarih),
                         "firma": secilen_firma,
                         "makine": secilen_makine,
                         "operator": secilen_operator,
                         "fiyat": float(girilen_fiyat),
-                        "detay": girilen_detay,
+                        "detay": girilen_detay if girilen_detay else "",
                         "baslama_tarihi": str(bas_tarihi),
                         "bitis_tarihi": str(bit_tarihi),
                         "baslama_saati": bas_saati_str,
@@ -898,7 +903,7 @@ else:
                         "toplam_saat": float(toplam_saat),
                         "ekleyen": st.session_state["user"],
                         "cihaz": cihaz_bilgisi,
-                        "fotograf": foto_yolu
+                        "fotograf": foto_yolu if foto_yolu else ""
                     }
                     
                     try:
@@ -923,21 +928,22 @@ else:
                 
                 records = []
                 for _, r in df_excel.iterrows():
+                    # NAN KORUMALI EXCEL YÜKLEMESİ
                     records.append({
                         "tarih": str(r.get("Tarih", datetime.date.today())),
-                        "firma": str(r.get("Firma", "")),
-                        "makine": str(r.get("Makine", "")),
-                        "operator": str(r.get("Operatör", "")),
-                        "fiyat": float(r.get("Fiyat", 0.0)),
-                        "detay": str(r.get("Detay", "")),
-                        "baslama_tarihi": str(r.get("Başlama Tarihi", datetime.date.today())),
-                        "bitis_tarihi": str(r.get("Bitiş Tarihi", datetime.date.today())),
-                        "baslama_saati": str(r.get("Başlama Saati", "08:00:00")),
-                        "bitis_saati": str(r.get("Bitiş Saati", "17:00:00")),
-                        "toplam_saat": float(r.get("Toplam Saat", 0.0)),
+                        "firma": str(r.get("Firma", "")) if pd.notna(r.get("Firma")) else "",
+                        "makine": str(r.get("Makine", "")) if pd.notna(r.get("Makine")) else "",
+                        "operator": str(r.get("Operatör", "")) if pd.notna(r.get("Operatör")) else "",
+                        "fiyat": float(r.get("Fiyat", 0.0)) if pd.notna(r.get("Fiyat")) else 0.0,
+                        "detay": str(r.get("Detay", "")) if pd.notna(r.get("Detay")) else "",
+                        "baslama_tarihi": str(r.get("Başlama Tarihi", datetime.date.today())) if pd.notna(r.get("Başlama Tarihi")) else str(datetime.date.today()),
+                        "bitis_tarihi": str(r.get("Bitiş Tarihi", datetime.date.today())) if pd.notna(r.get("Bitiş Tarihi")) else str(datetime.date.today()),
+                        "baslama_saati": str(r.get("Başlama Saati", "08:00")) if pd.notna(r.get("Başlama Saati")) else "08:00",
+                        "bitis_saati": str(r.get("Bitiş Saati", "17:00")) if pd.notna(r.get("Bitiş Saati")) else "17:00",
+                        "toplam_saat": float(r.get("Toplam Saat", 0.0)) if pd.notna(r.get("Toplam Saat")) else 0.0,
                         "ekleyen": st.session_state["user"],
                         "cihaz": get_device_info(),
-                        "fotograf": str(r.get("Fotoğraf", ""))
+                        "fotograf": str(r.get("Fotoğraf", "")) if pd.notna(r.get("Fotoğraf")) else ""
                     })
                 
                 if records:
@@ -1125,7 +1131,6 @@ else:
         with tab_users:
             users_db = pd.read_csv(U_FILE)
             firma_secenekleri = [""] + get_list("Firma")
-            
             st.write("### 👥 Mevcut Kullanıcılar ve Müşteriler")
             
             for idx, user_row in users_db.iterrows():
