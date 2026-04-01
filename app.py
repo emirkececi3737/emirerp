@@ -48,17 +48,6 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
-    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    .stDeployButton {display:none !important;}
-    
-    /* MANAGE APP BUTONUNU TAMAMEN GİZLEME KODU */
-    .viewerBadge_container {display: none !important;}
-    #viewerBadge_link {display: none !important;}
-    [data-testid="manage-app-button"] {display: none !important;}
-    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -186,16 +175,19 @@ def get_supabase_data():
         res = supabase.table("satislar").select("*").execute()
         df = pd.DataFrame(res.data)
         if df.empty:
-            return pd.DataFrame(columns=["id", "Tarih", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Başlama Saati", "Bitiş Saati", "Toplam Saat", "Ekleyen", "Cihaz", "Fotoğraf"])
+            return pd.DataFrame(columns=["id", "Tarih", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Başlama Tarihi", "Bitiş Tarihi", "Başlama Saati", "Bitiş Saati", "Toplam Saat", "Ekleyen", "Cihaz", "Fotoğraf"])
         
         rename_map = {
             "tarih": "Tarih", "firma": "Firma", "makine": "Makine",
             "operator": "Operatör", "fiyat": "Fiyat", "detay": "Detay",
+            "baslama_tarihi": "Başlama Tarihi", "bitis_tarihi": "Bitiş Tarihi",
             "baslama_saati": "Başlama Saati", "bitis_saati": "Bitiş Saati", "toplam_saat": "Toplam Saat",
             "ekleyen": "Ekleyen", "cihaz": "Cihaz", "fotograf": "Fotoğraf"
         }
         df = df.rename(columns=rename_map)
         
+        if "Başlama Tarihi" not in df.columns: df["Başlama Tarihi"] = ""
+        if "Bitiş Tarihi" not in df.columns: df["Bitiş Tarihi"] = ""
         if "Başlama Saati" not in df.columns: df["Başlama Saati"] = ""
         if "Bitiş Saati" not in df.columns: df["Bitiş Saati"] = ""
         if "Toplam Saat" not in df.columns: df["Toplam Saat"] = 0.0
@@ -203,7 +195,7 @@ def get_supabase_data():
         return df
     except Exception as e:
         print(f"Supabase Hatası: {e}")
-        return pd.DataFrame(columns=["id", "Tarih", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Başlama Saati", "Bitiş Saati", "Toplam Saat", "Ekleyen", "Cihaz", "Fotoğraf"])
+        return pd.DataFrame(columns=["id", "Tarih", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Başlama Tarihi", "Bitiş Tarihi", "Başlama Saati", "Bitiş Saati", "Toplam Saat", "Ekleyen", "Cihaz", "Fotoğraf"])
 
 def show_loader(mesaj="İşlem Yapılıyor..."):
     if os.path.exists(LOGO_PATH):
@@ -256,8 +248,8 @@ def get_list(tip):
     df = pd.read_csv(S_FILE)
     return sorted(df[df["tip"] == tip]["deger"].unique().tolist())
 
-def create_wa_link(firma, makine, op, fiyat, detay, bas_saat, bit_saat, top_saat):
-    msg = f"📋 *YENİ SERVİS KAYDI*\n\n🏢 *Firma:* {firma}\n🚜 *Makine:* {makine}\n👷 *Operatör:* {op}\n⏱️ *Süre:* {top_saat} Saat ({bas_saat} - {bit_saat})\n💰 *Tutar:* {fiyat:,.2f} TL\n📝 *İşlem:* {detay}"
+def create_wa_link(firma, makine, op, fiyat, detay, bas_tar, bit_tar, bas_saat, bit_saat, top_saat):
+    msg = f"📋 *YENİ SERVİS KAYDI*\n\n🏢 *Firma:* {firma}\n🚜 *Makine:* {makine}\n👷 *Operatör:* {op}\n⏱️ *Süre:* {top_saat} Saat ({bas_tar} {bas_saat} - {bit_tar} {bit_saat})\n💰 *Tutar:* {fiyat:,.2f} TL\n📝 *İşlem:* {detay}"
     return f"https://wa.me/?text={urllib.parse.quote(msg)}"
 
 def get_device_info():
@@ -601,7 +593,7 @@ else:
                     for idx, row in cust_df.sort_values('Tarih', ascending=False).iterrows():
                         with st.expander(f"📍 {row['Makine']} | {row['Tarih']} | {row['Fiyat']} TL"):
                             st.write(f"**Operatör:** {row['Operatör']}")
-                            st.write(f"**Süre:** {row.get('Toplam Saat', 0)} Saat ({row.get('Başlama Saati', '-')} - {row.get('Bitiş Saati', '-')})")
+                            st.write(f"**Süre:** {row.get('Toplam Saat', 0)} Saat ({row.get('Başlama Tarihi', '-')} {row.get('Başlama Saati', '-')} - {row.get('Bitiş Tarihi', '-')} {row.get('Bitiş Saati', '-')})")
                             st.write(f"**İşlem:** {row['Detay']}")
                             if 'Fotoğraf' in row and pd.notna(row['Fotoğraf']) and row['Fotoğraf'] != "" and os.path.exists(row['Fotoğraf']):
                                 st.image(row['Fotoğraf'], caption="İşlem Kanıt Fotoğrafı", use_container_width=True)
@@ -702,10 +694,6 @@ else:
         operator_listesi = get_list("Operatör")
         makine_listesi = get_list("Makine")
         
-        saat_secenekleri = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
-        bas_idx = saat_secenekleri.index("08:00")
-        bit_idx = saat_secenekleri.index("17:00")
-        
         tab_manuel, tab_excel = st.tabs(["✍️ Manuel Veri Girişi", "📥 Excel Toplu Yükleme"])
         
         with tab_manuel:
@@ -716,12 +704,18 @@ else:
                 secilen_makine = col_f1.selectbox("🚜 Makine/Cihaz", makine_listesi, key="kayit_makine")
                 secilen_operator = col_f2.selectbox("👷 Operatör", operator_listesi, key="kayit_op")
                 girilen_fiyat = col_f2.number_input("💰 Servis Tutarı (TL)", min_value=0.0, key="kayit_fiyat")
-                secilen_tarih = st.date_input("📅 İşlem Tarihi", key="kayit_tarih")
+                secilen_tarih = st.date_input("📅 Kayıt Tarihi", key="kayit_tarih")
+                
+                st.markdown("---")
+                col_d1, col_d2 = st.columns(2)
+                bas_tarihi = col_d1.date_input("📅 İşe Başlama Tarihi", key="kayit_bas_tarih")
+                bit_tarihi = col_d2.date_input("📅 İşin Bitiş Tarihi", key="kayit_bit_tarih")
                 
                 col_t1, col_t2 = st.columns(2)
-                
-                bas_saati_str = col_t1.selectbox("⏰ İşe Başlama Saati", saat_secenekleri, index=bas_idx, key="kayit_bas_saati")
-                bit_saati_str = col_t2.selectbox("🏁 İşin Bitiş Saati", saat_secenekleri, index=bit_idx, key="kayit_bit_saati")
+                # KENDİ İSTEDİĞİN STANDART TIME_INPUT FORMATI 
+                bas_saati = col_t1.time_input("⏰ İşe Başlama Saati", value=datetime.time(8, 0), key="kayit_bas_saati")
+                bit_saati = col_t2.time_input("🏁 İşin Bitiş Saati", value=datetime.time(17, 0), key="kayit_bit_saati")
+                st.markdown("---")
                 
                 girilen_detay = st.text_area("🔍 Yapılan İşlem Özeti", key="kayit_detay")
                 secilen_foto = st.file_uploader("📸 Servis Fotoğrafı Yükle (Kanıt Görüntüsü - Opsiyonel)", type=['jpg', 'jpeg', 'png'], key="kayit_foto")
@@ -729,17 +723,14 @@ else:
                 if st.form_submit_button("✅ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
                     
-                    # Saat Hesaplaması
-                    bh, bm = map(int, bas_saati_str.split(':'))
-                    bih, bim = map(int, bit_saati_str.split(':'))
+                    # Saat ve Tarih Hesaplaması
+                    start_dt = datetime.datetime.combine(bas_tarihi, bas_saati)
+                    end_dt = datetime.datetime.combine(bit_tarihi, bit_saati)
                     
-                    s_dt = datetime.datetime(2000, 1, 1, bh, bm)
-                    e_dt = datetime.datetime(2000, 1, 1, bih, bim)
-                    
-                    if e_dt < s_dt: 
-                        e_dt += datetime.timedelta(days=1)
-                    
-                    toplam_saat = round((e_dt - s_dt).total_seconds() / 3600, 2)
+                    if end_dt >= start_dt:
+                        toplam_saat = round((end_dt - start_dt).total_seconds() / 3600, 2)
+                    else:
+                        toplam_saat = 0.0
                     
                     foto_yolu = ""
                     if secilen_foto is not None:
@@ -757,8 +748,10 @@ else:
                         "operator": secilen_operator,
                         "fiyat": float(girilen_fiyat),
                         "detay": girilen_detay,
-                        "baslama_saati": bas_saati_str,
-                        "bitis_saati": bit_saati_str,
+                        "baslama_tarihi": str(bas_tarihi),
+                        "bitis_tarihi": str(bit_tarihi),
+                        "baslama_saati": str(bas_saati),
+                        "bitis_saati": str(bit_saati),
                         "toplam_saat": float(toplam_saat),
                         "ekleyen": st.session_state["user"],
                         "cihaz": cihaz_bilgisi,
@@ -769,17 +762,17 @@ else:
                         supabase.table("satislar").insert(payload).execute()
                         log_islem(st.session_state['user'], f"Servis Kaydı Ekledi: {secilen_firma} - {girilen_fiyat} TL")
                         
-                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({bas_saati_str} - {bit_saati_str})\n💰 Tutar: {girilen_fiyat:,.2f} TL\n📝 İşlem: {girilen_detay}"
+                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({bas_tarihi} {str(bas_saati)[:5]} - {bit_tarihi} {str(bit_saati)[:5]})\n💰 Tutar: {girilen_fiyat:,.2f} TL\n📝 İşlem: {girilen_detay}"
                         send_wa_live_bot(canli_yayin_mesaji)
 
                         st.success("✅ Kayıt başarıyla Supabase bulutuna eklendi.")
-                        st.markdown(f'<a href="{create_wa_link(secilen_firma, secilen_makine, secilen_operator, girilen_fiyat, girilen_detay, bas_saati_str, bit_saati_str, toplam_saat)}" target="_blank" class="wa-button">📲 WhatsApp ile Bilgi Gönder</a>', unsafe_allow_html=True)
+                        st.markdown(f'<a href="{create_wa_link(secilen_firma, secilen_makine, secilen_operator, girilen_fiyat, girilen_detay, bas_tarihi, bit_tarihi, str(bas_saati)[:5], str(bit_saati)[:5], toplam_saat)}" target="_blank" class="wa-button">📲 WhatsApp ile Bilgi Gönder</a>', unsafe_allow_html=True)
                     except Exception as e:
-                        st.error(f"Kayıt eklenirken hata oluştu. Supabase SQL ayarını (sütun eklemeyi) yaptığından emin ol! Hata: {e}")
+                        st.error(f"Kayıt eklenirken hata oluştu. Supabase SQL ayarını (tarih sütunlarını eklemeyi) yaptığından emin ol! Hata: {e}")
 
         with tab_excel:
             yuklenen_dosya = st.file_uploader("Servis Kayıtları Excel Dosyası (.xlsx)", type=['xlsx'], key="excel_upload")
-            st.info("💡 Excel dosyasında 'Başlama Saati', 'Bitiş Saati' ve 'Toplam Saat' sütunları varsa sisteme otomatik aktarılır.")
+            st.info("💡 Excel dosyasında 'Başlama Tarihi', 'Bitiş Tarihi', 'Başlama Saati', 'Bitiş Saati' ve 'Toplam Saat' sütunları varsa sisteme otomatik aktarılır.")
             if yuklenen_dosya and st.button("🚀 Excel'i İçeri Aktar", key="btn_excel"):
                 show_loader("Excel Verileri Supabase'e Yükleniyor...")
                 df_excel = pd.read_excel(yuklenen_dosya)
@@ -793,8 +786,10 @@ else:
                         "operator": str(r.get("Operatör", "")),
                         "fiyat": float(r.get("Fiyat", 0.0)),
                         "detay": str(r.get("Detay", "")),
-                        "baslama_saati": str(r.get("Başlama Saati", "08:00")),
-                        "bitis_saati": str(r.get("Bitiş Saati", "17:00")),
+                        "baslama_tarihi": str(r.get("Başlama Tarihi", datetime.date.today())),
+                        "bitis_tarihi": str(r.get("Bitiş Tarihi", datetime.date.today())),
+                        "baslama_saati": str(r.get("Başlama Saati", "08:00:00")),
+                        "bitis_saati": str(r.get("Bitiş Saati", "17:00:00")),
                         "toplam_saat": float(r.get("Toplam Saat", 0.0)),
                         "ekleyen": st.session_state["user"],
                         "cihaz": get_device_info(),
@@ -883,7 +878,7 @@ else:
             output = io.BytesIO()
             df_export = df_filtered.drop(columns=['Tarih_DT', 'id', 'Fotoğraf'], errors='ignore')
             
-            istenen_sira = ['Tarih', 'Başlama Saati', 'Bitiş Saati', 'Toplam Saat', 'Firma', 'Makine', 'Operatör', 'Fiyat', 'Detay', 'Ekleyen', 'Cihaz']
+            istenen_sira = ['Tarih', 'Başlama Tarihi', 'Başlama Saati', 'Bitiş Tarihi', 'Bitiş Saati', 'Toplam Saat', 'Firma', 'Makine', 'Operatör', 'Fiyat', 'Detay', 'Ekleyen', 'Cihaz']
             mevcut_sutunlar = [col for col in istenen_sira if col in df_export.columns]
             df_export = df_export[mevcut_sutunlar]
             
@@ -893,7 +888,7 @@ else:
             dosya_adi = f"Filtreli_Servis_Raporu_{datetime.date.today()}.xlsx"
             
             st.download_button(
-                label="📥 Filtrelenen Verileri Nizami Excel Olarak İndir (Saatler Dahil)",
+                label="📥 Filtrelenen Verileri Nizami Excel Olarak İndir (Tarih ve Saatler Dahil)",
                 data=excel_verisi,
                 file_name=dosya_adi,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -942,10 +937,12 @@ else:
                     
                     col_detay.write(f"**Cihaz:** {row['Makine']} | **Operatör:** {row['Operatör']}")
                     
+                    b_tar = row.get('Başlama Tarihi', '-')
+                    bi_tar = row.get('Bitiş Tarihi', '-')
                     b_saat = row.get('Başlama Saati', '-')
                     bi_saat = row.get('Bitiş Saati', '-')
                     t_saat = row.get('Toplam Saat', 0)
-                    col_detay.write(f"**Çalışma Süresi:** {t_saat} Saat ({b_saat} - {bi_saat})")
+                    col_detay.write(f"**Çalışma Süresi:** {t_saat} Saat ({b_tar} {b_saat} - {bi_tar} {bi_saat})")
                     
                     col_detay.write(f"**İşlem:** {row['Detay']}")
                     
@@ -955,12 +952,12 @@ else:
                     col_detay.markdown(f"<span class='device-tag'>📱 Giriş Cihazı: {cihaz_metni}</span>", unsafe_allow_html=True)
                     
                     try:
-                        b_str = str(b_saat)[:5] if b_saat != '-' else '-'
-                        bi_str = str(bi_saat)[:5] if bi_saat != '-' else '-'
+                        b_saat_str = str(b_saat)[:5] if b_saat != '-' else '-'
+                        bi_saat_str = str(bi_saat)[:5] if bi_saat != '-' else '-'
                     except:
-                        b_str, bi_str = "-", "-"
+                        b_saat_str, bi_saat_str = "-", "-"
                         
-                    col_detay.markdown(f'<a href="{create_wa_link(row["Firma"],row["Makine"],row["Operatör"],row["Fiyat"],row["Detay"], b_str, bi_str, t_saat)}" target="_blank" class="wa-button" style="width:180px; font-size:12px; padding:6px;">📲 WhatsApp Paylaş</a>', unsafe_allow_html=True)
+                    col_detay.markdown(f'<a href="{create_wa_link(row["Firma"],row["Makine"],row["Operatör"],row["Fiyat"],row["Detay"], b_tar, bi_tar, b_saat_str, bi_saat_str, t_saat)}" target="_blank" class="wa-button" style="width:180px; font-size:12px; padding:6px;">📲 WhatsApp Paylaş</a>', unsafe_allow_html=True)
                     
                     if st.session_state["can_admin"]:
                         if col_sil.button("🗑️ Sil", key=f"del_btn_{benzersiz_anahtar}"):
