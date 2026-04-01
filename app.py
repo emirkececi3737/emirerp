@@ -151,10 +151,6 @@ S_FILE = "ayarlar.csv"
 N_FILE = "notes.txt"
 L_FILE = "logs.csv"
 D_FILE = "devam_eden.csv"
-ATTACH_DIR = "attachments"
-
-if not os.path.exists(ATTACH_DIR):
-    os.makedirs(ATTACH_DIR)
 
 def setup():
     if not os.path.exists(U_FILE):
@@ -643,8 +639,6 @@ else:
                             st.write(f"**Operatör:** {row['Operatör']}")
                             st.write(f"**Süre:** {row.get('Toplam Saat', 0)} Saat ({row.get('Başlama Tarihi', '-')} {row.get('Başlama Saati', '-')} - {row.get('Bitiş Tarihi', '-')} {row.get('Bitiş Saati', '-')})")
                             st.write(f"**İşlem:** {row['Detay']}")
-                            if 'Fotoğraf' in row and pd.notna(row['Fotoğraf']) and row['Fotoğraf'] != "" and os.path.exists(row['Fotoğraf']):
-                                st.image(row['Fotoğraf'], caption="İşlem Kanıt Fotoğrafı", use_container_width=True)
                 
                 with c_grafik2:
                     st.subheader("📈 Çalışma Dağılımı")
@@ -671,7 +665,6 @@ else:
             # --- DEVAM EDEN İŞLER (CANLI SAYAÇ) ---
             df_devam = pd.read_csv(D_FILE)
             
-            # YENİ EKLENEN YETKİ KONTROLÜ
             if st.session_state.get("can_view_all_tasks", False):
                 my_jobs = df_devam
                 baslik_metni = "### 🚀 Devam Eden İşler (Tümü)"
@@ -698,7 +691,6 @@ else:
                         
                     guncel_saat = guncel_birikmis / 3600
                     
-                    # İŞİ AÇAN BİLGİSİNİ KARTA EKLEME
                     ekleyen_bilgisi = f" <span style='color:#64748b; font-size:12px;'>(İşi Açan: {row['Ekleyen']})</span>" if st.session_state.get("can_view_all_tasks", False) else ""
                     
                     st.markdown(f"<div class='{css_class}'><b>{row['Firma']} - {row['Makine']}</b>{ekleyen_bilgisi}<br>Durum: {durum_ikon} | Biriken Süre: {guncel_saat:.2f} Saat</div>", unsafe_allow_html=True)
@@ -728,7 +720,6 @@ else:
                         toplam_saat = round(final_saniye / 3600, 2)
                         
                         detay_metni = str(row['Detay']) if pd.notna(row['Detay']) else ""
-                        foto_yolu = str(row['Foto_Yolu']) if pd.notna(row['Foto_Yolu']) else ""
                         
                         payload = {
                             "tarih": str(now.date()),
@@ -744,7 +735,7 @@ else:
                             "toplam_saat": float(toplam_saat),
                             "ekleyen": row['Ekleyen'], 
                             "cihaz": get_device_info(),
-                            "fotograf": foto_yolu
+                            "fotograf": ""
                         }
                         
                         try:
@@ -851,18 +842,9 @@ else:
                 c_op = col_c2.selectbox("👷 Operatör", operator_listesi, key="canli_op")
                 
                 c_detay = st.text_area("🔍 Yapılacak İşlem Özeti", key="canli_detay")
-                c_foto = st.file_uploader("📸 Başlangıç Fotoğrafı (Opsiyonel)", type=['jpg', 'jpeg', 'png'], key="canli_foto")
                 
                 if st.form_submit_button("▶️ İŞİ BAŞLAT (SAYACI AÇ)"):
                     show_loader("İş Başlatılıyor...")
-                    
-                    foto_yolu = ""
-                    if c_foto is not None:
-                        zaman_damgasi = int(time.time())
-                        dosya_adi = f"{c_firma.replace(' ', '_')}_{zaman_damgasi}.jpg"
-                        foto_yolu = os.path.join(ATTACH_DIR, dosya_adi)
-                        with open(foto_yolu, "wb") as f:
-                            f.write(c_foto.getbuffer())
                     
                     now_str = datetime.datetime.now().isoformat()
                     yeni_is = pd.DataFrame([{
@@ -872,7 +854,7 @@ else:
                         "Operatör": c_op, 
                         "Fiyat": 0.0, 
                         "Detay": c_detay if c_detay else "", 
-                        "Foto_Yolu": foto_yolu,
+                        "Foto_Yolu": "",
                         "Durum": "Çalışıyor", 
                         "Ilk_Baslama": now_str, 
                         "Son_Baslama": now_str,
@@ -907,7 +889,6 @@ else:
                 st.markdown("---")
                 
                 girilen_detay = st.text_area("🔍 Yapılan İşlem Özeti", key="kayit_detay")
-                secilen_foto = st.file_uploader("📸 Servis Fotoğrafı Yükle (Kanıt Görüntüsü - Opsiyonel)", type=['jpg', 'jpeg', 'png'], key="kayit_foto")
                 
                 if st.form_submit_button("✅ GEÇMİŞ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
@@ -920,14 +901,6 @@ else:
                     else:
                         toplam_saat = 0.0
                     
-                    foto_yolu = ""
-                    if secilen_foto is not None:
-                        zaman_damgasi = int(time.time())
-                        dosya_adi = f"{secilen_firma.replace(' ', '_')}_{zaman_damgasi}.jpg"
-                        foto_yolu = os.path.join(ATTACH_DIR, dosya_adi)
-                        with open(foto_yolu, "wb") as f:
-                            f.write(secilen_foto.getbuffer())
-
                     cihaz_bilgisi = get_device_info()
                     
                     payload = {
@@ -944,7 +917,7 @@ else:
                         "toplam_saat": float(toplam_saat),
                         "ekleyen": st.session_state["user"],
                         "cihaz": cihaz_bilgisi,
-                        "fotograf": foto_yolu if foto_yolu else ""
+                        "fotograf": ""
                     }
                     
                     try:
@@ -984,7 +957,7 @@ else:
                         "toplam_saat": float(r.get("Toplam Saat", 0.0)) if pd.notna(r.get("Toplam Saat")) else 0.0,
                         "ekleyen": st.session_state["user"],
                         "cihaz": get_device_info(),
-                        "fotograf": str(r.get("Fotoğraf", "")) if pd.notna(r.get("Fotoğraf")) else ""
+                        "fotograf": ""
                     })
                 
                 if records:
@@ -1123,9 +1096,6 @@ else:
                     col_detay.write(f"**Çalışma Süresi:** {t_saat} Saat ({b_tar} {b_saat} - {bi_tar} {bi_saat})")
                     col_detay.write(f"**İşlem:** {row['Detay']}")
                     
-                    if 'Fotoğraf' in row and pd.notna(row['Fotoğraf']) and row['Fotoğraf'] != "" and os.path.exists(row['Fotoğraf']):
-                        col_detay.image(row['Fotoğraf'], caption="İşlem Kanıt Fotoğrafı", use_container_width=True)
-                        
                     col_detay.markdown(f"<span class='device-tag'>📱 Giriş Cihazı: {cihaz_metni}</span>", unsafe_allow_html=True)
                     
                     try:
@@ -1148,7 +1118,7 @@ else:
         else:
             st.info("Sistemde henüz analiz edilecek kayıtlı veri bulunmuyor.")
 
-    # ================= YÖNETİM PANELİ (PROGRAM AYARLARI BURAYA EKLENDİ) =================
+    # ================= YÖNETİM PANELİ =================
     elif choice == "⚙️ Yönetim Paneli":
         st.title("⚙️ Sistem Yönetimi")
         
@@ -1202,40 +1172,11 @@ else:
             df_a.to_csv(S_FILE, index=False)
             log_islem(st.session_state['user'], "SİSTEMİ TAMAMEN FABRİKA AYARLARINA SIFIRLADI")
         
-        # TABLARIN OLUŞTURULMASI (Program Ayarları ilk sıraya alındı)
-        tab_settings, tab_users, tab_operators, tab_firms, tab_machines, tab_bot, tab_email, tab_logs = st.tabs([
-            "⚙️ Program Ayarları", "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları"
+        # TABLARIN OLUŞTURULMASI (Program Ayarları en sağa alındı)
+        tab_users, tab_operators, tab_firms, tab_machines, tab_bot, tab_email, tab_logs, tab_settings = st.tabs([
+            "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları", "⚙️ Program Ayarları"
         ])
         
-        # --- YENİ EKLENEN PROGRAM AYARLARI SEKME İÇERİĞİ ---
-        with tab_settings:
-            st.subheader("⚠️ Kritik Sistem Sıfırlama İşlemleri")
-            st.error("DİKKAT! Bu alandaki işlemler geri alınamaz. Yanlışlıkla silinmeleri önlemek için her işlem iki aşamalı onay (çift tik) gerektirir.")
-            
-            col_rs1, col_rs2 = st.columns(2)
-            
-            def render_reset_card(col, title, key_prefix, warning_text, btn_text, action_func):
-                with col.container():
-                    st.markdown(f"#### {title}")
-                    c1 = st.checkbox(f"1. Onay: İşlemin kalıcı olduğunu kabul ediyorum.", key=f"{key_prefix}_1")
-                    c2 = st.checkbox(f"2. Onay: {warning_text}", key=f"{key_prefix}_2")
-                    if st.button(btn_text, disabled=not (c1 and c2), key=f"{key_prefix}_btn", use_container_width=True):
-                        show_loader(f"{title} işlemi yapılıyor...")
-                        action_func()
-                        st.success(f"✅ {title} başarıyla tamamlandı.")
-                        time.sleep(1)
-                        st.rerun()
-                    st.divider()
-
-            render_reset_card(col_rs1, "👤 Kullanıcıları Sıfırla", "rst_usr", "Tüm kullanıcıların (Admin hariç) silineceğini onaylıyorum.", "Kullanıcıları Sıfırla", reset_users_func)
-            render_reset_card(col_rs1, "👷 Operatörleri Sıfırla", "rst_op", "Kayıtlı tüm operatörlerin silineceğini onaylıyorum.", "Operatörleri Sıfırla", reset_op_func)
-            render_reset_card(col_rs1, "🚜 Makineleri Sıfırla", "rst_mac", "Kayıtlı tüm makinelerin silineceğini onaylıyorum.", "Makineleri Sıfırla", reset_mac_func)
-
-            render_reset_card(col_rs2, "📊 Raporları Sıfırla", "rst_rep", "Buluttaki tüm servis kayıtlarının silineceğini onaylıyorum.", "Raporları Sıfırla", reset_rep_func)
-            render_reset_card(col_rs2, "🏢 Firmaları Sıfırla", "rst_firm", "Kayıtlı tüm firmaların silineceğini onaylıyorum.", "Firmaları Sıfırla", reset_firm_func)
-            render_reset_card(col_rs2, "💥 TÜM SİSTEMİ SIFIRLA", "rst_all", "Kayıtların, listelerin, logların ve notların TAMAMEN silineceğini onaylıyorum.", "Tüm Sistemi Fabrika Ayarlarına Döndür", reset_all_func)
-        # ---------------------------------------------------
-
         with tab_users:
             users_db = pd.read_csv(U_FILE)
             firma_secenekleri = [""] + get_list("Firma")
@@ -1463,3 +1404,31 @@ else:
                     st.warning("Henüz kaydedilmiş bir sistem logu bulunmuyor.")
             else:
                 st.warning("Log dosyası bulunamadı.")
+                
+        # --- YENİ EKLENEN PROGRAM AYARLARI SEKME İÇERİĞİ ---
+        with tab_settings:
+            st.subheader("⚠️ Kritik Sistem Sıfırlama İşlemleri")
+            st.error("DİKKAT! Bu alandaki işlemler geri alınamaz. Yanlışlıkla silinmeleri önlemek için her işlem iki aşamalı onay (çift tik) gerektirir.")
+            
+            col_rs1, col_rs2 = st.columns(2)
+            
+            def render_reset_card(col, title, key_prefix, warning_text, btn_text, action_func):
+                with col.container():
+                    st.markdown(f"#### {title}")
+                    c1 = st.checkbox(f"1. Onay: İşlemin kalıcı olduğunu kabul ediyorum.", key=f"{key_prefix}_1")
+                    c2 = st.checkbox(f"2. Onay: {warning_text}", key=f"{key_prefix}_2")
+                    if st.button(btn_text, disabled=not (c1 and c2), key=f"{key_prefix}_btn", use_container_width=True):
+                        show_loader(f"{title} işlemi yapılıyor...")
+                        action_func()
+                        st.success(f"✅ {title} başarıyla tamamlandı.")
+                        time.sleep(1)
+                        st.rerun()
+                    st.divider()
+
+            render_reset_card(col_rs1, "👤 Kullanıcıları Sıfırla", "rst_usr", "Tüm kullanıcıların (Admin hariç) silineceğini onaylıyorum.", "Kullanıcıları Sıfırla", reset_users_func)
+            render_reset_card(col_rs1, "👷 Operatörleri Sıfırla", "rst_op", "Kayıtlı tüm operatörlerin silineceğini onaylıyorum.", "Operatörleri Sıfırla", reset_op_func)
+            render_reset_card(col_rs1, "🚜 Makineleri Sıfırla", "rst_mac", "Kayıtlı tüm makinelerin silineceğini onaylıyorum.", "Makineleri Sıfırla", reset_mac_func)
+
+            render_reset_card(col_rs2, "📊 Raporları Sıfırla", "rst_rep", "Buluttaki tüm servis kayıtlarının silineceğini onaylıyorum.", "Raporları Sıfırla", reset_rep_func)
+            render_reset_card(col_rs2, "🏢 Firmaları Sıfırla", "rst_firm", "Kayıtlı tüm firmaların silineceğini onaylıyorum.", "Firmaları Sıfırla", reset_firm_func)
+            render_reset_card(col_rs2, "💥 TÜM SİSTEMİ SIFIRLA", "rst_all", "Kayıtların, listelerin, logların ve notların TAMAMEN silineceğini onaylıyorum.", "Tüm Sistemi Fabrika Ayarlarına Döndür", reset_all_func)
