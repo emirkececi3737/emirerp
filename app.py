@@ -48,12 +48,6 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
-    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    .stDeployButton {display:none !important;}
-    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -703,7 +697,6 @@ else:
             with st.form("kayit_formu", clear_on_submit=True):
                 col_f1, col_f2 = st.columns(2)
                 
-                # --- MOBİL HATASINA KARŞI KESİN ÇÖZÜM: HER ELEMANA "KEY" ATANDI ---
                 secilen_firma = col_f1.selectbox("🏢 Firma Seçimi", firma_listesi, key="kayit_firma")
                 secilen_makine = col_f1.selectbox("🚜 Makine/Cihaz", makine_listesi, key="kayit_makine")
                 secilen_operator = col_f2.selectbox("👷 Operatör", operator_listesi, key="kayit_op")
@@ -712,7 +705,6 @@ else:
                 
                 col_t1, col_t2 = st.columns(2)
                 
-                # --- MOBİL HATASINA KARŞI KESİN ÇÖZÜM: STEP=15 DAKİKA (900 SANİYE) EKLENDİ ---
                 bas_saati = col_t1.time_input("⏰ İşe Başlama Saati", value=datetime.time(8, 0), step=datetime.timedelta(minutes=15), key="kayit_bas_saati")
                 bit_saati = col_t2.time_input("🏁 İşin Bitiş Saati", value=datetime.time(17, 0), step=datetime.timedelta(minutes=15), key="kayit_bit_saati")
                 
