@@ -157,6 +157,8 @@ def setup():
         pd.DataFrame([{
             "username": "admin", 
             "password": "123", 
+            "name": "Sistem",
+            "surname": "Yöneticisi",
             "can_view_reports": True, 
             "can_manage_admin": True, 
             "can_edit_dashboard": True,
@@ -168,13 +170,18 @@ def setup():
         }]).to_csv(U_FILE, index=False)
     
     u_df = pd.read_csv(U_FILE)
-    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker", "can_view_all_tasks"]
+    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker", "can_view_all_tasks", "name", "surname"]
     updated = False
     for c in cols:
         if c not in u_df.columns:
-            u_df[c] = False if "can" not in c else True
-            if c == "can_view_ticker": 
-                u_df[c] = True
+            if c == "name":
+                u_df[c] = u_df["username"]
+            elif c == "surname":
+                u_df[c] = ""
+            else:
+                u_df[c] = False if "can" not in c else True
+                if c == "can_view_ticker": 
+                    u_df[c] = True
             updated = True
     if updated: 
         u_df.to_csv(U_FILE, index=False)
@@ -406,9 +413,12 @@ if "logged_in" not in st.session_state:
         match = users[(users['username'] == u) & (users['password'].astype(str) == p)]
         if not match.empty:
             r = match.iloc[0]
+            f_name = f"{r.get('name', r['username'])} {r.get('surname', '')}".strip()
+            
             st.session_state.update({
                 "logged_in": True, 
-                "user": u, 
+                "user": u,
+                "full_name": f_name,
                 "can_view": bool(r["can_view_reports"]), 
                 "can_admin": bool(r["can_manage_admin"]), 
                 "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
@@ -496,7 +506,7 @@ if not st.session_state.get("logged_in"):
     col1, col_login, col3 = st.columns([1, 1, 1])
     with col_login:
         with st.form("login_panel", clear_on_submit=False):
-            u_in = st.text_input("Kullanıcı Adı", key="login_user")
+            u_in = st.text_input("Kullanıcı Adı (Örn: ali.yilmaz)", key="login_user")
             p_in = st.text_input("Şifre", type="password", key="login_pass")
             rem = st.checkbox("Beni Hatırla (Girişi Sakla)", key="login_rem")
             
@@ -504,9 +514,12 @@ if not st.session_state.get("logged_in"):
                 users = pd.read_csv(U_FILE)
                 match = users[(users['username'] == u_in) & (users['password'].astype(str) == p_in)]
                 if not match.empty:
-                    show_loader("Sisteme Giriş Yapılıyor...")
-                    log_islem(u_in, "Sisteme Giriş Yaptı")
                     r = match.iloc[0]
+                    f_name = f"{r.get('name', r['username'])} {r.get('surname', '')}".strip()
+                    
+                    show_loader("Sisteme Giriş Yapılıyor...")
+                    log_islem(f_name, "Sisteme Giriş Yaptı")
+                    
                     if rem: 
                         cookies["saved_user"] = u_in
                         cookies["saved_pass"] = p_in
@@ -514,6 +527,7 @@ if not st.session_state.get("logged_in"):
                     st.session_state.update({
                         "logged_in": True, 
                         "user": u_in, 
+                        "full_name": f_name,
                         "can_view": bool(r["can_view_reports"]), 
                         "can_admin": bool(r["can_manage_admin"]), 
                         "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
@@ -532,9 +546,9 @@ else:
     with st.sidebar:
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, use_container_width=True)
-            st.markdown(f"<p style='text-align:center; font-weight:bold; color:#64748b; margin-top:-10px;'>👋 Hoş geldin, {st.session_state['user'].upper()}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center; font-weight:bold; color:#64748b; margin-top:-10px;'>👋 Hoş geldin,<br>{st.session_state['full_name'].upper()}</p>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<h2 style='text-align:center;'>👋 {st.session_state['user'].upper()}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center;'>👋 {st.session_state['full_name'].upper()}</h3>", unsafe_allow_html=True)
             
         st.divider()
         
@@ -584,7 +598,7 @@ else:
         
         if st.button("🚪 GÜVENLİ ÇIKIŞ", key="btn_logout"):
             show_loader("Sistemden Güvenle Çıkılıyor...")
-            log_islem(st.session_state['user'], "Sistemden Çıkış Yaptı")
+            log_islem(st.session_state['full_name'], "Sistemden Çıkış Yaptı")
             if "saved_user" in cookies: del cookies["saved_user"]
             if "saved_pass" in cookies: del cookies["saved_pass"]
             cookies.save()
@@ -652,8 +666,8 @@ else:
                 st.markdown("### 🛠️ Acil Bir Durum Mu Var?")
                 if st.button("📲 SERVİS TALEP ET (WHATSAPP İLE BİLDİR)", key="btn_talep"):
                     show_loader("Talep İletiliyor...")
-                    log_islem(st.session_state['user'], "Acil Servis Talebi Gönderdi")
-                    talep_mesaji = f"🆘 *ACİL SERVİS TALEBİ*\n\n🏢 Firma: {firm_name}\n👤 Yetkili: {st.session_state['user']}\n📅 Tarih: {datetime.date.today()}\n\nLütfen en kısa sürede bizimle iletişime geçiniz."
+                    log_islem(st.session_state['full_name'], "Acil Servis Talebi Gönderdi")
+                    talep_mesaji = f"🆘 *ACİL SERVİS TALEBİ*\n\n🏢 Firma: {firm_name}\n👤 Yetkili: {st.session_state['full_name']}\n📅 Tarih: {datetime.date.today()}\n\nLütfen en kısa sürede bizimle iletişime geçiniz."
                     send_wa_live_bot(talep_mesaji)
                     st.success("Talebiniz başarıyla merkez ofisimize iletildi. Yetkililerimiz en kısa sürede dönüş yapacaktır.")
             else:
@@ -669,7 +683,8 @@ else:
                 my_jobs = df_devam
                 baslik_metni = "### 🚀 Devam Eden İşler (Tümü)"
             else:
-                my_jobs = df_devam[df_devam['Ekleyen'] == st.session_state['user']]
+                # Hem eski kullanıcı adıyla kayıtlıları hem de yeni sistemdeki tam isimle kayıtlıları getir
+                my_jobs = df_devam[(df_devam['Ekleyen'] == st.session_state['user']) | (df_devam['Ekleyen'] == st.session_state['full_name'])]
                 baslik_metni = "### 🚀 Devam Eden İşlerim"
             
             if not my_jobs.empty:
@@ -743,8 +758,8 @@ else:
                             df_devam = df_devam.drop(idx)
                             df_devam.to_csv(D_FILE, index=False)
                             
-                            log_islem(st.session_state['user'], f"Canlı İş Bitirdi: {row['Firma']}")
-                            send_wa_live_bot(f"🚨 *YAPIKUR ERP - CANLI İŞ TAMAMLANDI*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {row['Firma']}\n🚜 Makine: {row['Makine']}\n👷 Operatör: {row['Operatör']}\n⏱️ Toplam Çalışma: {toplam_saat} Saat\n📝 İşlem: {detay_metni}")
+                            log_islem(st.session_state['full_name'], f"Canlı İş Bitirdi: {row['Firma']}")
+                            send_wa_live_bot(f"🚨 *YAPIKUR ERP - CANLI İŞ TAMAMLANDI*\n\n👨‍💻 Ekleyen: {st.session_state['full_name']}\n🏢 Firma: {row['Firma']}\n🚜 Makine: {row['Makine']}\n👷 Operatör: {row['Operatör']}\n⏱️ Toplam Çalışma: {toplam_saat} Saat\n📝 İşlem: {detay_metni}")
                             
                             st.success("İş başarıyla tamamlandı ve raporlara işlendi!")
                             time.sleep(1)
@@ -765,7 +780,7 @@ else:
                 if st.button("💾 Notları Kaydet", key="btn_not_kaydet"):
                     if new_notes is not None:
                         show_loader("Notlar Kaydediliyor...")
-                        log_islem(st.session_state['user'], "Ana Menü Notlarını Güncelledi")
+                        log_islem(st.session_state['full_name'], "Ana Menü Notlarını Güncelledi")
                         with open(N_FILE, "w", encoding="utf-8") as f: 
                             f.write(new_notes)
                         st.success("✅ Ana Menü notları başarıyla güncellendi.")
@@ -818,7 +833,7 @@ else:
             cevap = akilli_asistan_cevapla(prompt, df_bot)
                 
             st.session_state.messages.append({"role": "assistant", "content": cevap})
-            log_islem(st.session_state['user'], "Akıllı Asistanı Kullandı")
+            log_islem(st.session_state['full_name'], "Akıllı Asistanı Kullandı")
             st.rerun()
 
     # ================= SERVİS KAYDI =================
@@ -859,13 +874,13 @@ else:
                         "Ilk_Baslama": now_str, 
                         "Son_Baslama": now_str,
                         "Birikmis_Saniye": 0.0, 
-                        "Ekleyen": st.session_state["user"]
+                        "Ekleyen": st.session_state["full_name"] # Artık kişi ismi eklenecek
                     }])
                     
                     df_devam = pd.read_csv(D_FILE)
                     pd.concat([df_devam, yeni_is]).to_csv(D_FILE, index=False)
                     
-                    log_islem(st.session_state['user'], f"Canlı İş Başlattı: {c_firma}")
+                    log_islem(st.session_state['full_name'], f"Canlı İş Başlattı: {c_firma}")
                     st.success("✅ İş başlatıldı! Ana Menü üzerinden sayacı kontrol edebilirsiniz.")
 
         # 2. SEKME: MANUEL GEÇMİŞ İŞ GİRİŞİ
@@ -915,16 +930,16 @@ else:
                         "baslama_saati": str(bas_saati)[:5],
                         "bitis_saati": str(bit_saati)[:5],
                         "toplam_saat": float(toplam_saat),
-                        "ekleyen": st.session_state["user"],
+                        "ekleyen": st.session_state["full_name"], # Artık kişi ismi eklenecek
                         "cihaz": cihaz_bilgisi,
                         "fotograf": ""
                     }
                     
                     try:
                         supabase.table("satislar").insert(payload).execute()
-                        log_islem(st.session_state['user'], f"Servis Kaydı Ekledi: {secilen_firma}")
+                        log_islem(st.session_state['full_name'], f"Servis Kaydı Ekledi: {secilen_firma}")
                         
-                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({bas_tarihi} {str(bas_saati)[:5]} - {bit_tarihi} {str(bit_saati)[:5]})\n📝 İşlem: {girilen_detay}"
+                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['full_name']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({bas_tarihi} {str(bas_saati)[:5]} - {bit_tarihi} {str(bit_saati)[:5]})\n📝 İşlem: {girilen_detay}"
                         send_wa_live_bot(canli_yayin_mesaji)
 
                         st.success("✅ Kayıt başarıyla Supabase bulutuna eklendi.")
@@ -955,7 +970,7 @@ else:
                         "baslama_saati": str(r.get("Başlama Saati", "08:00:00")) if pd.notna(r.get("Başlama Saati")) else "08:00:00",
                         "bitis_saati": str(r.get("Bitiş Saati", "17:00:00")) if pd.notna(r.get("Bitiş Saati")) else "17:00:00",
                         "toplam_saat": float(r.get("Toplam Saat", 0.0)) if pd.notna(r.get("Toplam Saat")) else 0.0,
-                        "ekleyen": st.session_state["user"],
+                        "ekleyen": st.session_state["full_name"],
                         "cihaz": get_device_info(),
                         "fotograf": ""
                     })
@@ -963,7 +978,7 @@ else:
                 if records:
                     try:
                         supabase.table("satislar").insert(records).execute()
-                        log_islem(st.session_state['user'], "Excel ile Toplu Veri Aktardı")
+                        log_islem(st.session_state['full_name'], "Excel ile Toplu Veri Aktardı")
                         st.success("✅ Toplu veri aktarımı buluta başarıyla tamamlandı.")
                     except Exception as e:
                         st.error(f"Aktarım Hatası: {e}")
@@ -1044,7 +1059,7 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
                 key="btn_excel_indir",
-                on_click=lambda: log_islem(st.session_state['user'], "Excel Raporu İndirdi")
+                on_click=lambda: log_islem(st.session_state['full_name'], "Excel Raporu İndirdi")
             )
             
             with st.expander("📧 Raporu Doğrudan E-Posta Olarak Gönder"):
@@ -1054,7 +1069,7 @@ else:
                         show_loader("E-Posta Gönderiliyor...")
                         success, msg = send_excel_via_email(alici_mail, excel_verisi, dosya_adi)
                         if success:
-                            log_islem(st.session_state['user'], f"E-Posta Gönderdi: {alici_mail}")
+                            log_islem(st.session_state['full_name'], f"E-Posta Gönderdi: {alici_mail}")
                             st.success(f"✅ {msg}")
                         else:
                             st.error(f"❌ {msg}")
@@ -1109,7 +1124,7 @@ else:
                     if st.session_state["can_admin"]:
                         if col_sil.button("🗑️ Sil", key=f"del_btn_{benzersiz_anahtar}"):
                             show_loader("Kayıt Buluttan Siliniyor...")
-                            log_islem(st.session_state['user'], f"Kayıt Sildi: {row['Firma']}")
+                            log_islem(st.session_state['full_name'], f"Kayıt Sildi: {row['Firma']}")
                             try:
                                 supabase.table("satislar").delete().eq("id", row['id']).execute()
                                 st.rerun()
@@ -1125,30 +1140,30 @@ else:
         # SIFIRLAMA FONKSİYONLARI
         def reset_users_func():
             pd.DataFrame([{
-                "username": "admin", "password": "123", "can_view_reports": True,
+                "username": "admin", "password": "123", "name": "Sistem", "surname": "Yöneticisi", "can_view_reports": True,
                 "can_manage_admin": True, "can_edit_dashboard": True,
                 "can_use_assistant": True, "can_view_ticker": True, "can_view_all_tasks": True,
                 "is_customer": False, "customer_firm": ""
             }]).to_csv(U_FILE, index=False)
-            log_islem(st.session_state['user'], "Sistem Kullanıcılarını Sıfırladı")
+            log_islem(st.session_state['full_name'], "Sistem Kullanıcılarını Sıfırladı")
 
         def reset_op_func():
             df_a = pd.read_csv(S_FILE)
             df_a = df_a[df_a['tip'] != 'Operatör']
             df_a.to_csv(S_FILE, index=False)
-            log_islem(st.session_state['user'], "Operatör Listesini Sıfırladı")
+            log_islem(st.session_state['full_name'], "Operatör Listesini Sıfırladı")
 
         def reset_firm_func():
             df_a = pd.read_csv(S_FILE)
             df_a = df_a[df_a['tip'] != 'Firma']
             df_a.to_csv(S_FILE, index=False)
-            log_islem(st.session_state['user'], "Firma Listesini Sıfırladı")
+            log_islem(st.session_state['full_name'], "Firma Listesini Sıfırladı")
 
         def reset_mac_func():
             df_a = pd.read_csv(S_FILE)
             df_a = df_a[df_a['tip'] != 'Makine']
             df_a.to_csv(S_FILE, index=False)
-            log_islem(st.session_state['user'], "Makine Listesini Sıfırladı")
+            log_islem(st.session_state['full_name'], "Makine Listesini Sıfırladı")
 
         def reset_rep_func():
             try:
@@ -1156,7 +1171,7 @@ else:
             except Exception as e:
                 print("Supabase silme hatasi:", e)
             pd.DataFrame(columns=["id", "Firma", "Makine", "Operatör", "Fiyat", "Detay", "Foto_Yolu", "Durum", "Ilk_Baslama", "Son_Baslama", "Birikmis_Saniye", "Ekleyen"]).to_csv(D_FILE, index=False)
-            log_islem(st.session_state['user'], "Tüm Servis Raporlarını Sıfırladı")
+            log_islem(st.session_state['full_name'], "Tüm Servis Raporlarını Sıfırladı")
 
         def reset_all_func():
             reset_users_func()
@@ -1170,9 +1185,9 @@ else:
             df_a = pd.read_csv(S_FILE)
             df_a = df_a[df_a['tip'].isin(['EMAIL_ADDR', 'EMAIL_PASS', 'WA_BOT_SUB', 'BOT_PHONE', 'BOT_APIKEY'])]
             df_a.to_csv(S_FILE, index=False)
-            log_islem(st.session_state['user'], "SİSTEMİ TAMAMEN FABRİKA AYARLARINA SIFIRLADI")
+            log_islem(st.session_state['full_name'], "SİSTEMİ TAMAMEN FABRİKA AYARLARINA SIFIRLADI")
         
-        # TABLARIN OLUŞTURULMASI (Program Ayarları en sağa alındı)
+        # TABLARIN OLUŞTURULMASI
         tab_users, tab_operators, tab_firms, tab_machines, tab_bot, tab_email, tab_logs, tab_settings = st.tabs([
             "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları", "⚙️ Program Ayarları"
         ])
@@ -1185,10 +1200,20 @@ else:
             
             for idx, user_row in users_db.iterrows():
                 rol_etiketi = "MÜŞTERİ" if user_row.get("is_customer", False) else "PERSONEL"
-                with st.expander(f"👤 {user_row['username']} ({rol_etiketi})"):
+                
+                # AD SOYAD BOŞSA KULLANICI ADINI GÖSTER
+                f_name = f"{user_row.get('name', '')} {user_row.get('surname', '')}".strip()
+                if not f_name: f_name = user_row['username']
+                
+                with st.expander(f"👤 {f_name} (@{user_row['username']}) - {rol_etiketi}"):
                     col_f, col_s = st.columns([4, 1])
                     with col_f:
                         with st.form(f"edit_user_form_{idx}"):
+                            
+                            c_isim, c_soyisim = st.columns(2)
+                            e_name = c_isim.text_input("Adı", value=str(user_row.get('name', '')))
+                            e_sur = c_soyisim.text_input("Soyadı", value=str(user_row.get('surname', '')))
+                            
                             e_pw = st.text_input("Şifre", value=str(user_row['password']))
                             st.markdown("---")
                             
@@ -1209,8 +1234,10 @@ else:
                             e_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)", value=bool(user_row.get('can_view_all_tasks', False)))
                             e_adm = st.checkbox("Yönetici Yetkisi", value=bool(user_row['can_manage_admin']), disabled=(user_row['username']=='admin'))
                             
-                            if st.form_submit_button("🔄 Yetkileri Güncelle"):
-                                show_loader("Yetkiler Güncelleniyor...")
+                            if st.form_submit_button("🔄 Güncelle"):
+                                show_loader("Bilgiler Güncelleniyor...")
+                                users_db.at[idx, 'name'] = e_name
+                                users_db.at[idx, 'surname'] = e_sur
                                 users_db.at[idx, 'password'] = e_pw
                                 users_db.at[idx, 'is_customer'] = e_cust
                                 users_db.at[idx, 'customer_firm'] = e_cust_firm if e_cust else ""
@@ -1222,8 +1249,8 @@ else:
                                 if user_row['username'] != 'admin': 
                                     users_db.at[idx, 'can_manage_admin'] = e_adm
                                 users_db.to_csv(U_FILE, index=False)
-                                log_islem(st.session_state['user'], f"Yetki Güncelledi: {user_row['username']}")
-                                st.success("✅ Yetkiler başarıyla güncellendi!")
+                                log_islem(st.session_state['full_name'], f"Kullanıcı Bilgisini Güncelledi: {user_row['username']}")
+                                st.success("✅ Bilgiler başarıyla güncellendi!")
                                 time.sleep(0.5)
                                 st.rerun()
                     
@@ -1231,14 +1258,29 @@ else:
                         if user_row['username'] != "admin":
                             if st.button("❌ Sil", key=f"del_user_{idx}"):
                                 show_loader("Kullanıcı Siliniyor...")
-                                log_islem(st.session_state['user'], f"Kullanıcı Sildi: {user_row['username']}")
+                                log_islem(st.session_state['full_name'], f"Kullanıcı Sildi: {user_row['username']}")
                                 users_db.drop(idx).to_csv(U_FILE, index=False)
                                 st.rerun()
             
-            with st.expander("➕ Yeni Personel veya Müşteri Ekle"):
+            # YENİ KİŞİ EKLEME BUTONU VE FORMU (Sıranın sonuna daha şık eklendi)
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_bosluk, col_ekle_btn = st.columns([5, 2])
+            
+            if col_ekle_btn.button("➕ Yeni Personel Ekle", use_container_width=True):
+                st.session_state["show_add_user"] = not st.session_state.get("show_add_user", False)
+                st.rerun()
+                
+            if st.session_state.get("show_add_user", False):
+                st.markdown("### ✨ Yeni Kayıt Formu")
                 with st.form("new_u_form"):
-                    nu = st.text_input("Kullanıcı Adı")
-                    np = st.text_input("Şifre")
+                    
+                    col_n1, col_n2 = st.columns(2)
+                    n_name = col_n1.text_input("Kullanıcının Adı")
+                    n_surname = col_n2.text_input("Kullanıcının Soyadı")
+                    
+                    nu = st.text_input("Giriş İçin Kullanıcı Adı (Örn: ali.yilmaz)")
+                    np = st.text_input("Giriş İçin Şifre")
+                    
                     st.markdown("---")
                     y_cust = st.checkbox("Yeni Müşteri Hesabı Oluştur")
                     y_cust_firm = st.selectbox("Müşteri İçin Firma Seç (Opsiyonel)", firma_secenekleri)
@@ -1251,25 +1293,33 @@ else:
                     y_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)")
                     ya = st.checkbox("Admin Yetkisi")
                     
-                    if st.form_submit_button("Sisteme Kaydet"):
-                        show_loader("Yeni Kullanıcı Oluşturuluyor...")
-                        yeni_kullanici = pd.DataFrame([{
-                            "username": nu, 
-                            "password": np, 
-                            "can_view_reports": yr, 
-                            "can_manage_admin": ya, 
-                            "can_edit_dashboard": yd, 
-                            "can_use_assistant": y_ai,
-                            "can_view_ticker": y_tick,
-                            "can_view_all_tasks": y_view_all, 
-                            "is_customer": y_cust, 
-                            "customer_firm": y_cust_firm if y_cust else ""
-                        }])
-                        pd.concat([users_db, yeni_kullanici]).to_csv(U_FILE, index=False)
-                        log_islem(st.session_state['user'], f"Yeni Kullanıcı Ekledi: {nu}")
-                        st.success("✅ Yeni kullanıcı başarıyla eklendi!")
-                        time.sleep(0.5)
-                        st.rerun()
+                    if st.form_submit_button("💾 Sisteme Kaydet"):
+                        if not nu or not np or not n_name:
+                            st.error("Lütfen en azından Kullanıcı Adı, Adı ve Şifre alanlarını doldurun.")
+                        else:
+                            show_loader("Yeni Kullanıcı Oluşturuluyor...")
+                            yeni_kullanici = pd.DataFrame([{
+                                "username": nu, 
+                                "password": np,
+                                "name": n_name,
+                                "surname": n_surname,
+                                "can_view_reports": yr, 
+                                "can_manage_admin": ya, 
+                                "can_edit_dashboard": yd, 
+                                "can_use_assistant": y_ai,
+                                "can_view_ticker": y_tick,
+                                "can_view_all_tasks": y_view_all, 
+                                "is_customer": y_cust, 
+                                "customer_firm": y_cust_firm if y_cust else ""
+                            }])
+                            pd.concat([users_db, yeni_kullanici]).to_csv(U_FILE, index=False)
+                            log_islem(st.session_state['full_name'], f"Yeni Kullanıcı Ekledi: {n_name} {n_surname}")
+                            
+                            # Formu kapat
+                            st.session_state["show_add_user"] = False
+                            st.success("✅ Yeni kullanıcı başarıyla eklendi!")
+                            time.sleep(0.5)
+                            st.rerun()
 
         def yonetim_listesi(liste_adi, v_tipi):
             st.subheader(f"{liste_adi} Yönetimi")
@@ -1281,7 +1331,7 @@ else:
                     okunan_excel = pd.read_excel(yuklenen)
                     yeni_liste = [{"tip": v_tipi, "deger": str(x)} for x in okunan_excel.iloc[:,0].dropna().unique()]
                     pd.concat([pd.read_csv(S_FILE), pd.DataFrame(yeni_liste)]).to_csv(S_FILE, index=False)
-                    log_islem(st.session_state['user'], f"Excel ile {liste_adi} Aktardı")
+                    log_islem(st.session_state['full_name'], f"Excel ile {liste_adi} Aktardı")
                     st.rerun()
             
             c_in, c_btn = st.columns([4, 1])
@@ -1289,7 +1339,7 @@ else:
             if c_btn.button("EKLE", key=f"add_{v_tipi}") and yeni:
                 show_loader("Listeye Ekleniyor...")
                 pd.concat([pd.read_csv(S_FILE), pd.DataFrame([{"tip": v_tipi, "deger": yeni}])]).to_csv(S_FILE, index=False)
-                log_islem(st.session_state['user'], f"Sisteme {liste_adi} Ekledi: {yeni}")
+                log_islem(st.session_state['full_name'], f"Sisteme {liste_adi} Ekledi: {yeni}")
                 st.rerun()
             
             for index, eleman in enumerate(get_list(v_tipi)):
@@ -1300,7 +1350,7 @@ else:
                     df_a = pd.read_csv(S_FILE)
                     df_a = df_a[~((df_a['tip'] == v_tipi) & (df_a['deger'] == eleman))]
                     df_a.to_csv(S_FILE, index=False)
-                    log_islem(st.session_state['user'], f"Sistemden {liste_adi} Sildi: {eleman}")
+                    log_islem(st.session_state['full_name'], f"Sistemden {liste_adi} Sildi: {eleman}")
                     st.rerun()
 
         with tab_operators: 
@@ -1331,7 +1381,7 @@ else:
                             show_loader("Kişi Ağdan Çıkarılıyor...")
                             df_ayar = df_ayar[~((df_ayar['tip'] == 'WA_BOT_SUB') & (df_ayar['deger'] == abone))]
                             df_ayar.to_csv(S_FILE, index=False)
-                            log_islem(st.session_state['user'], f"WhatsApp Yayınına Çıkardı: {parcalar[0]}")
+                            log_islem(st.session_state['full_name'], f"WhatsApp Yayınına Çıkardı: {parcalar[0]}")
                             st.rerun()
             
             st.divider()
@@ -1350,7 +1400,7 @@ else:
                         yeni_deger = f"{n_isim}|{n_phone}|{n_api}"
                         yeni_ek = pd.DataFrame([{"tip": "WA_BOT_SUB", "deger": yeni_deger}])
                         pd.concat([df_ayar, yeni_ek]).to_csv(S_FILE, index=False)
-                        log_islem(st.session_state['user'], f"WhatsApp Yayınına Ekledi: {n_isim}")
+                        log_islem(st.session_state['full_name'], f"WhatsApp Yayınına Ekledi: {n_isim}")
                         st.success(f"✅ {n_isim} başarıyla yayın ağına katıldı!")
                         time.sleep(0.5)
                         st.rerun()
@@ -1379,7 +1429,7 @@ else:
                         {"tip": "EMAIL_PASS", "deger": yeni_pass}
                     ])
                     pd.concat([df_ayar, yeni_ayarlar]).to_csv(S_FILE, index=False)
-                    log_islem(st.session_state['user'], "E-Posta Ayarlarını Değiştirdi")
+                    log_islem(st.session_state['full_name'], "E-Posta Ayarlarını Değiştirdi")
                     st.success("✅ E-Posta Ayarları başarıyla kaydedildi!")
                     time.sleep(0.5)
                     st.rerun()
@@ -1405,7 +1455,7 @@ else:
             else:
                 st.warning("Log dosyası bulunamadı.")
                 
-        # --- YENİ EKLENEN PROGRAM AYARLARI SEKME İÇERİĞİ ---
+        # --- PROGRAM AYARLARI SEKME İÇERİĞİ ---
         with tab_settings:
             st.subheader("⚠️ Kritik Sistem Sıfırlama İşlemleri")
             st.error("DİKKAT! Bu alandaki işlemler geri alınamaz. Yanlışlıkla silinmeleri önlemek için her işlem iki aşamalı onay (çift tik) gerektirir.")
