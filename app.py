@@ -691,6 +691,11 @@ else:
         operator_listesi = get_list("Operatör")
         makine_listesi = get_list("Makine")
         
+        # --- MOBİL HATASINA KESİN ÇÖZÜM: SAAT SEÇENEKLERİ DİZİSİ ---
+        saat_secenekleri = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
+        bas_idx = saat_secenekleri.index("08:00")
+        bit_idx = saat_secenekleri.index("17:00")
+        
         tab_manuel, tab_excel = st.tabs(["✍️ Manuel Veri Girişi", "📥 Excel Toplu Yükleme"])
         
         with tab_manuel:
@@ -705,8 +710,9 @@ else:
                 
                 col_t1, col_t2 = st.columns(2)
                 
-                bas_saati = col_t1.time_input("⏰ İşe Başlama Saati", value=datetime.time(8, 0), step=datetime.timedelta(minutes=15), key="kayit_bas_saati")
-                bit_saati = col_t2.time_input("🏁 İşin Bitiş Saati", value=datetime.time(17, 0), step=datetime.timedelta(minutes=15), key="kayit_bit_saati")
+                # MOBİLDE ÇÖKTÜREN TİME_INPUT YERİNE, GÜVENLİ SELECTBOX KULLANILDI
+                bas_saati_str = col_t1.selectbox("⏰ İşe Başlama Saati", saat_secenekleri, index=bas_idx, key="kayit_bas_saati")
+                bit_saati_str = col_t2.selectbox("🏁 İşin Bitiş Saati", saat_secenekleri, index=bit_idx, key="kayit_bit_saati")
                 
                 girilen_detay = st.text_area("🔍 Yapılan İşlem Özeti", key="kayit_detay")
                 secilen_foto = st.file_uploader("📸 Servis Fotoğrafı Yükle (Kanıt Görüntüsü - Opsiyonel)", type=['jpg', 'jpeg', 'png'], key="kayit_foto")
@@ -714,12 +720,17 @@ else:
                 if st.form_submit_button("✅ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
                     
-                    # Saat Hesaplaması
-                    start_dt = datetime.datetime.combine(datetime.date.today(), bas_saati)
-                    end_dt = datetime.datetime.combine(datetime.date.today(), bit_saati)
-                    if end_dt < start_dt: 
-                        end_dt += datetime.timedelta(days=1)
-                    toplam_saat = round((end_dt - start_dt).total_seconds() / 3600, 2)
+                    # Saat Hesaplaması (Metinden Çeviri)
+                    bh, bm = map(int, bas_saati_str.split(':'))
+                    bih, bim = map(int, bit_saati_str.split(':'))
+                    
+                    s_dt = datetime.datetime(2000, 1, 1, bh, bm)
+                    e_dt = datetime.datetime(2000, 1, 1, bih, bim)
+                    
+                    if e_dt < s_dt: 
+                        e_dt += datetime.timedelta(days=1)
+                    
+                    toplam_saat = round((e_dt - s_dt).total_seconds() / 3600, 2)
                     
                     foto_yolu = ""
                     if secilen_foto is not None:
@@ -737,8 +748,8 @@ else:
                         "operator": secilen_operator,
                         "fiyat": float(girilen_fiyat),
                         "detay": girilen_detay,
-                        "baslama_saati": str(bas_saati),
-                        "bitis_saati": str(bit_saati),
+                        "baslama_saati": bas_saati_str,
+                        "bitis_saati": bit_saati_str,
                         "toplam_saat": float(toplam_saat),
                         "ekleyen": st.session_state["user"],
                         "cihaz": cihaz_bilgisi,
@@ -749,11 +760,11 @@ else:
                         supabase.table("satislar").insert(payload).execute()
                         log_islem(st.session_state['user'], f"Servis Kaydı Ekledi: {secilen_firma} - {girilen_fiyat} TL")
                         
-                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({str(bas_saati)[:5]} - {str(bit_saati)[:5]})\n💰 Tutar: {girilen_fiyat:,.2f} TL\n📝 İşlem: {girilen_detay}"
+                        canli_yayin_mesaji = f"🚨 *YAPIKUR ERP - YENİ KAYIT*\n\n👨‍💻 Ekleyen: {st.session_state['user']}\n🏢 Firma: {secilen_firma}\n🚜 Makine: {secilen_makine}\n👷 Operatör: {secilen_operator}\n⏱️ Süre: {toplam_saat} Saat ({bas_saati_str} - {bit_saati_str})\n💰 Tutar: {girilen_fiyat:,.2f} TL\n📝 İşlem: {girilen_detay}"
                         send_wa_live_bot(canli_yayin_mesaji)
 
                         st.success("✅ Kayıt başarıyla Supabase bulutuna eklendi.")
-                        st.markdown(f'<a href="{create_wa_link(secilen_firma, secilen_makine, secilen_operator, girilen_fiyat, girilen_detay, str(bas_saati)[:5], str(bit_saati)[:5], toplam_saat)}" target="_blank" class="wa-button">📲 WhatsApp ile Bilgi Gönder</a>', unsafe_allow_html=True)
+                        st.markdown(f'<a href="{create_wa_link(secilen_firma, secilen_makine, secilen_operator, girilen_fiyat, girilen_detay, bas_saati_str, bit_saati_str, toplam_saat)}" target="_blank" class="wa-button">📲 WhatsApp ile Bilgi Gönder</a>', unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"Kayıt eklenirken hata oluştu. Supabase SQL ayarını (sütun eklemeyi) yaptığından emin ol! Hata: {e}")
 
@@ -773,8 +784,8 @@ else:
                         "operator": str(r.get("Operatör", "")),
                         "fiyat": float(r.get("Fiyat", 0.0)),
                         "detay": str(r.get("Detay", "")),
-                        "baslama_saati": str(r.get("Başlama Saati", "08:00:00")),
-                        "bitis_saati": str(r.get("Bitiş Saati", "17:00:00")),
+                        "baslama_saati": str(r.get("Başlama Saati", "08:00")),
+                        "bitis_saati": str(r.get("Bitiş Saati", "17:00")),
                         "toplam_saat": float(r.get("Toplam Saat", 0.0)),
                         "ekleyen": st.session_state["user"],
                         "cihaz": get_device_info(),
