@@ -48,6 +48,12 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
+    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    .stDeployButton {display:none !important;}
+    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -450,10 +456,10 @@ if not st.session_state.get("logged_in"):
         
     col1, col_login, col3 = st.columns([1, 1, 1])
     with col_login:
-        with st.form("login_panel"):
-            u_in = st.text_input("Kullanıcı Adı")
-            p_in = st.text_input("Şifre", type="password")
-            rem = st.checkbox("Beni Hatırla (Girişi Sakla)")
+        with st.form("login_panel", clear_on_submit=False):
+            u_in = st.text_input("Kullanıcı Adı", key="login_user")
+            p_in = st.text_input("Şifre", type="password", key="login_pass")
+            rem = st.checkbox("Beni Hatırla (Girişi Sakla)", key="login_rem")
             
             if st.form_submit_button("SİSTEME GİRİŞ YAP"):
                 users = pd.read_csv(U_FILE)
@@ -492,7 +498,7 @@ else:
         st.divider()
         
         if st.session_state.get("is_cust", False):
-            if st.button("🏠 Müşteri Panosu", use_container_width=True):
+            if st.button("🏠 Müşteri Panosu", use_container_width=True, key="btn_cust_dash"):
                 show_loader("Pano Yükleniyor...")
                 st.session_state["choice"] = "🏠 Dashboard"
                 st.session_state["kapat"] = True
@@ -500,34 +506,34 @@ else:
             st.info(f"📍 Bağlı Firma: {st.session_state['cust_firm']}")
             
         else:
-            if st.button("🏠 Dashboard", use_container_width=True):
+            if st.button("🏠 Dashboard", use_container_width=True, key="btn_dash"):
                 show_loader("Dashboard Yükleniyor...")
                 st.session_state["choice"] = "🏠 Dashboard"
                 st.session_state["kapat"] = True
                 st.rerun()
                 
             if st.session_state.get("can_use_ai", False):
-                if st.button("🤖 Akıllı Asistan", use_container_width=True):
+                if st.button("🤖 Akıllı Asistan", use_container_width=True, key="btn_ai"):
                     show_loader("Yapay Zeka Bağlanıyor...")
                     st.session_state["choice"] = "🤖 Akıllı Asistan"
                     st.session_state["kapat"] = True
                     st.rerun()
                 
-            if st.button("📝 Servis Kaydı", use_container_width=True):
+            if st.button("📝 Servis Kaydı", use_container_width=True, key="btn_servis"):
                 show_loader("Kayıt Ekranı Yükleniyor...")
                 st.session_state["choice"] = "📝 Servis Kaydı"
                 st.session_state["kapat"] = True
                 st.rerun()
                 
             if st.session_state["can_view"]:
-                if st.button("📊 Finansal Analiz", use_container_width=True):
+                if st.button("📊 Finansal Analiz", use_container_width=True, key="btn_finans"):
                     show_loader("Raporlar Hazırlanıyor...")
                     st.session_state["choice"] = "📊 Finansal Analiz"
                     st.session_state["kapat"] = True
                     st.rerun()
                     
             if st.session_state["can_admin"]:
-                if st.button("⚙️ Yönetim Paneli", use_container_width=True):
+                if st.button("⚙️ Yönetim Paneli", use_container_width=True, key="btn_admin"):
                     show_loader("Sistem Yönetimi Yükleniyor...")
                     st.session_state["choice"] = "⚙️ Yönetim Paneli"
                     st.session_state["kapat"] = True
@@ -535,7 +541,7 @@ else:
         
         st.divider()
         
-        if st.button("🚪 GÜVENLİ ÇIKIŞ"):
+        if st.button("🚪 GÜVENLİ ÇIKIŞ", key="btn_logout"):
             show_loader("Sistemden Güvenle Çıkılıyor...")
             log_islem(st.session_state['user'], "Sistemden Çıkış Yaptı")
             if "saved_user" in cookies: del cookies["saved_user"]
@@ -544,7 +550,6 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
             
-        # Sol Menü Alt Kısmı Telif Yazısı
         st.markdown("<br><br><br><div style='text-align: center; color: #94a3b8; font-size: 11px; padding-bottom: 20px;'>© 2026 EMİR ERP.<br>Tüm hakları saklıdır.</div>", unsafe_allow_html=True)
 
         if st.session_state.get("kapat", False):
@@ -604,7 +609,7 @@ else:
                 
                 st.divider()
                 st.markdown("### 🛠️ Acil Bir Durum Mu Var?")
-                if st.button("📲 SERVİS TALEP ET (WHATSAPP İLE BİLDİR)"):
+                if st.button("📲 SERVİS TALEP ET (WHATSAPP İLE BİLDİR)", key="btn_talep"):
                     show_loader("Talep İletiliyor...")
                     log_islem(st.session_state['user'], "Acil Servis Talebi Gönderdi")
                     talep_mesaji = f"🆘 *ACİL SERVİS TALEBİ*\n\n🏢 Firma: {firm_name}\n👤 Yetkili: {st.session_state['user']}\n📅 Tarih: {datetime.date.today()}\n\nLütfen en kısa sürede bizimle iletişime geçiniz."
@@ -626,7 +631,7 @@ else:
                 custom_toolbar = [[{'header': [1, 2, 3, 4, 5, 6, False]}], ['bold', 'italic', 'underline', 'strike'], [{'color': []}, {'background': []}], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']]
                 new_notes = st_quill(value=note_content, html=True, toolbar=custom_toolbar, key="quill_editor")
                 
-                if st.button("💾 Notları Kaydet"):
+                if st.button("💾 Notları Kaydet", key="btn_not_kaydet"):
                     if new_notes is not None:
                         show_loader("Notlar Kaydediliyor...")
                         log_islem(st.session_state['user'], "Dashboard Notlarını Güncelledi")
@@ -697,19 +702,22 @@ else:
         with tab_manuel:
             with st.form("kayit_formu", clear_on_submit=True):
                 col_f1, col_f2 = st.columns(2)
-                secilen_firma = col_f1.selectbox("🏢 Firma Seçimi", firma_listesi)
-                secilen_makine = col_f1.selectbox("🚜 Makine/Cihaz", makine_listesi)
-                secilen_operator = col_f2.selectbox("👷 Operatör", operator_listesi)
-                girilen_fiyat = col_f2.number_input("💰 Servis Tutarı (TL)", min_value=0.0)
-                secilen_tarih = st.date_input("📅 İşlem Tarihi")
                 
-                # --- YENİ SAAT BÖLÜMÜ ---
+                # --- MOBİL HATASINA KARŞI KESİN ÇÖZÜM: HER ELEMANA "KEY" ATANDI ---
+                secilen_firma = col_f1.selectbox("🏢 Firma Seçimi", firma_listesi, key="kayit_firma")
+                secilen_makine = col_f1.selectbox("🚜 Makine/Cihaz", makine_listesi, key="kayit_makine")
+                secilen_operator = col_f2.selectbox("👷 Operatör", operator_listesi, key="kayit_op")
+                girilen_fiyat = col_f2.number_input("💰 Servis Tutarı (TL)", min_value=0.0, key="kayit_fiyat")
+                secilen_tarih = st.date_input("📅 İşlem Tarihi", key="kayit_tarih")
+                
                 col_t1, col_t2 = st.columns(2)
-                bas_saati = col_t1.time_input("⏰ İşe Başlama Saati", value=datetime.time(8, 0))
-                bit_saati = col_t2.time_input("🏁 İşin Bitiş Saati", value=datetime.time(17, 0))
                 
-                girilen_detay = st.text_area("🔍 Yapılan İşlem Özeti")
-                secilen_foto = st.file_uploader("📸 Servis Fotoğrafı Yükle (Kanıt Görüntüsü - Opsiyonel)", type=['jpg', 'jpeg', 'png'])
+                # --- MOBİL HATASINA KARŞI KESİN ÇÖZÜM: STEP=15 DAKİKA (900 SANİYE) EKLENDİ ---
+                bas_saati = col_t1.time_input("⏰ İşe Başlama Saati", value=datetime.time(8, 0), step=datetime.timedelta(minutes=15), key="kayit_bas_saati")
+                bit_saati = col_t2.time_input("🏁 İşin Bitiş Saati", value=datetime.time(17, 0), step=datetime.timedelta(minutes=15), key="kayit_bit_saati")
+                
+                girilen_detay = st.text_area("🔍 Yapılan İşlem Özeti", key="kayit_detay")
+                secilen_foto = st.file_uploader("📸 Servis Fotoğrafı Yükle (Kanıt Görüntüsü - Opsiyonel)", type=['jpg', 'jpeg', 'png'], key="kayit_foto")
                 
                 if st.form_submit_button("✅ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
@@ -758,9 +766,9 @@ else:
                         st.error(f"Kayıt eklenirken hata oluştu. Supabase SQL ayarını (sütun eklemeyi) yaptığından emin ol! Hata: {e}")
 
         with tab_excel:
-            yuklenen_dosya = st.file_uploader("Servis Kayıtları Excel Dosyası (.xlsx)", type=['xlsx'])
+            yuklenen_dosya = st.file_uploader("Servis Kayıtları Excel Dosyası (.xlsx)", type=['xlsx'], key="excel_upload")
             st.info("💡 Excel dosyasında 'Başlama Saati', 'Bitiş Saati' ve 'Toplam Saat' sütunları varsa sisteme otomatik aktarılır.")
-            if yuklenen_dosya and st.button("🚀 Excel'i İçeri Aktar"):
+            if yuklenen_dosya and st.button("🚀 Excel'i İçeri Aktar", key="btn_excel"):
                 show_loader("Excel Verileri Supabase'e Yükleniyor...")
                 df_excel = pd.read_excel(yuklenen_dosya)
                 
@@ -804,8 +812,8 @@ else:
             firmalar = ["Tümü"] + sorted(df_satislar['Firma'].dropna().unique().tolist())
             operatorler = ["Tümü"] + sorted(df_satislar['Operatör'].dropna().unique().tolist())
             
-            sec_firma_filtre = col_filtre1.selectbox("Firma Filtresi", firmalar)
-            sec_op_filtre = col_filtre2.selectbox("Operatör Filtresi", operatorler)
+            sec_firma_filtre = col_filtre1.selectbox("Firma Filtresi", firmalar, key="filtre_firma")
+            sec_op_filtre = col_filtre2.selectbox("Operatör Filtresi", operatorler, key="filtre_op")
             
             min_date = df_satislar['Tarih_DT'].min()
             max_date = df_satislar['Tarih_DT'].max()
@@ -814,7 +822,7 @@ else:
             else:
                 min_date, max_date = min_date.date(), max_date.date()
                 
-            sec_tarih_araligi = col_filtre3.date_input("Tarih Aralığı", [min_date, max_date])
+            sec_tarih_araligi = col_filtre3.date_input("Tarih Aralığı", [min_date, max_date], key="filtre_tarih")
             
             df_filtered = df_satislar.copy()
             if sec_firma_filtre != "Tümü": 
@@ -849,7 +857,6 @@ else:
             col_k1, col_k2, col_k3, col_k4 = st.columns(4)
             col_k1.metric("FİLTRELENEN CİRO", f"{df_filtered['Fiyat'].sum():,.2f} TL")
             
-            # YENİ: Toplam Mesai Saati KPI'ı
             toplam_mesai = df_filtered['Toplam Saat'].sum() if 'Toplam Saat' in df_filtered.columns else 0
             col_k2.metric("TOPLAM MESAİ SÜRESİ", f"{toplam_mesai:,.2f} Saat")
             
@@ -861,11 +868,9 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Sütunları düzenleyip Excel'e aktarıyoruz
             output = io.BytesIO()
             df_export = df_filtered.drop(columns=['Tarih_DT', 'id', 'Fotoğraf'], errors='ignore')
             
-            # Excel'deki Sütun Sıralamasını Şıklaştırma
             istenen_sira = ['Tarih', 'Başlama Saati', 'Bitiş Saati', 'Toplam Saat', 'Firma', 'Makine', 'Operatör', 'Fiyat', 'Detay', 'Ekleyen', 'Cihaz']
             mevcut_sutunlar = [col for col in istenen_sira if col in df_export.columns]
             df_export = df_export[mevcut_sutunlar]
@@ -881,12 +886,13 @@ else:
                 file_name=dosya_adi,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
+                key="btn_excel_indir",
                 on_click=lambda: log_islem(st.session_state['user'], "Excel Raporu İndirdi")
             )
             
             with st.expander("📧 Raporu Doğrudan E-Posta Olarak Gönder"):
-                alici_mail = st.text_input("Alıcı E-Posta Adresi (Örn: muhasebe@sirket.com)")
-                if st.button("🚀 Excel'i E-Posta At"):
+                alici_mail = st.text_input("Alıcı E-Posta Adresi (Örn: muhasebe@sirket.com)", key="mail_alici")
+                if st.button("🚀 Excel'i E-Posta At", key="btn_mail_gonder"):
                     if alici_mail:
                         show_loader("E-Posta Gönderiliyor...")
                         success, msg = send_excel_via_email(alici_mail, excel_verisi, dosya_adi)
@@ -906,7 +912,6 @@ else:
                 fig_firma = px.bar(df_filtered, x="Firma", y="Fiyat", title="Firma Bazlı Gelir Dağılımı", template="plotly_white", color_discrete_sequence=['#2563eb'])
                 c_g1.plotly_chart(fig_firma, use_container_width=True)
                 
-                # Yeni Grafik: Operatörlere göre çalışma saatleri
                 if 'Toplam Saat' in df_filtered.columns and df_filtered['Toplam Saat'].sum() > 0:
                     fig_saat = px.pie(df_filtered, names="Operatör", values="Toplam Saat", title="Operatör Bazlı Mesai Saati Dağılımı", template="plotly_white", hole=0.4)
                     c_g2.plotly_chart(fig_saat, use_container_width=True)
@@ -925,7 +930,6 @@ else:
                     
                     col_detay.write(f"**Cihaz:** {row['Makine']} | **Operatör:** {row['Operatör']}")
                     
-                    # Saatleri Liste Gösteriminde Belirt
                     b_saat = row.get('Başlama Saati', '-')
                     bi_saat = row.get('Bitiş Saati', '-')
                     t_saat = row.get('Toplam Saat', 0)
@@ -965,11 +969,9 @@ else:
             "👤 Kullanıcılar/Müşteriler", "👷 Operatörler", "🏢 Firmalar", "🚜 Makineler", "🤖 Bot Ayarları", "📧 E-Posta", "🕵️ Sistem Logları"
         ])
         
-        # --- KULLANICI YETKİLERİ VE MÜŞTERİ YÖNETİMİ ---
         with tab_users:
             users_db = pd.read_csv(U_FILE)
             firma_secenekleri = [""] + get_list("Firma")
-            
             st.write("### 👥 Mevcut Kullanıcılar ve Müşteriler")
             
             for idx, user_row in users_db.iterrows():
@@ -1051,10 +1053,8 @@ else:
                         time.sleep(0.5)
                         st.rerun()
 
-        # --- ORTAK YÖNETİM FONKSİYONU ---
         def yonetim_listesi(liste_adi, v_tipi):
             st.subheader(f"{liste_adi} Yönetimi")
-            
             with st.expander(f"📥 Excel'den {liste_adi} Aktar"):
                 yuklenen = st.file_uploader(f"Excel (.xlsx)", key=f"up_{v_tipi}")
                 if yuklenen and st.button("Güncelle", key=f"btn_up_{v_tipi}"):
@@ -1084,21 +1084,14 @@ else:
                     log_islem(st.session_state['user'], f"Sistemden {liste_adi} Sildi: {eleman}")
                     st.rerun()
 
-        # --- DİĞER TABLAR ---
-        with tab_operators: 
-            yonetim_listesi("Operatör", "Operatör")
-        with tab_firms: 
-            yonetim_listesi("Firma", "Firma")
-        with tab_machines: 
-            yonetim_listesi("Makine", "Makine")
+        with tab_operators: yonetim_listesi("Operatör", "Operatör")
+        with tab_firms: yonetim_listesi("Firma", "Firma")
+        with tab_machines: yonetim_listesi("Makine", "Makine")
             
-        # --- WHATSAPP YAYIN AĞI TABI ---
         with tab_bot:
             st.subheader("📡 WhatsApp Canlı Yayın Ağı (Çoklu Gönderim)")
             st.info("Sisteme girilen yeni kayıtlar, buraya eklediğiniz tüm yetkililere anında WhatsApp üzerinden özel mesaj olarak gönderilir. (Sınırsız kişi ekleyebilirsiniz!)")
-            
             df_ayar = pd.read_csv(S_FILE)
-            
             st.markdown("### 👥 Kayıtlı Yayın Alıcıları")
             aboneler = df_ayar[df_ayar['tip'] == 'WA_BOT_SUB']['deger'].tolist()
             if not aboneler:
@@ -1140,14 +1133,11 @@ else:
                     else:
                         st.error("Lütfen tüm alanları doldurun.")
                     
-        # --- E-POSTA AYARLARI TABI ---
         with tab_email:
             st.subheader("📧 Otomatik E-Posta Gönderim Ayarları")
-            
             df_ayar = pd.read_csv(S_FILE)
             email_rows = df_ayar[df_ayar['tip'] == 'EMAIL_ADDR']
             pass_rows = df_ayar[df_ayar['tip'] == 'EMAIL_PASS']
-            
             mevcut_email = email_rows['deger'].iloc[0] if not email_rows.empty else ""
             mevcut_pass = pass_rows['deger'].iloc[0] if not pass_rows.empty else ""
             
@@ -1168,17 +1158,14 @@ else:
                     time.sleep(0.5)
                     st.rerun()
 
-        # --- SİSTEM LOGLARI TABI ---
         with tab_logs:
             st.subheader("🕵️ Sistem Denetim ve Güvenlik Logları")
             st.info("Sisteme kimin, hangi cihazdan ve ne zaman giriş yaptığını buradan takip edebilirsiniz.")
-            
             if os.path.exists(L_FILE):
                 df_logs = pd.read_csv(L_FILE)
                 if not df_logs.empty:
                     df_logs_sorted = df_logs.sort_values(by=['Tarih', 'Saat'], ascending=[False, False])
                     st.dataframe(df_logs_sorted, use_container_width=True, hide_index=True)
-                    
                     if st.button("🗑️ Tüm Log Kayıtlarını Temizle"):
                         show_loader("Loglar Temizleniyor...")
                         pd.DataFrame(columns=["Tarih", "Saat", "Kullanıcı", "İşlem", "Cihaz"]).to_csv(L_FILE, index=False)
