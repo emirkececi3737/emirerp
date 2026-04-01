@@ -166,12 +166,13 @@ def setup():
             "can_edit_dashboard": True,
             "can_use_assistant": True,
             "can_view_ticker": True,
+            "can_view_all_tasks": True,  # YENİ YETKİ
             "is_customer": False,
             "customer_firm": ""
         }]).to_csv(U_FILE, index=False)
     
     u_df = pd.read_csv(U_FILE)
-    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker"]
+    cols = ["is_customer", "customer_firm", "can_use_assistant", "can_edit_dashboard", "can_view_ticker", "can_view_all_tasks"] # YENİ YETKİ EKLENDİ
     updated = False
     for c in cols:
         if c not in u_df.columns:
@@ -417,6 +418,7 @@ if "logged_in" not in st.session_state:
                 "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
                 "can_use_ai": bool(r.get("can_use_assistant", False)), 
                 "can_view_ticker": bool(r.get("can_view_ticker", True)),
+                "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), # YENİ EKLENDİ
                 "is_cust": bool(r.get("is_customer", False)), 
                 "cust_firm": str(r.get("customer_firm", ""))
             })
@@ -521,6 +523,7 @@ if not st.session_state.get("logged_in"):
                         "can_edit_dash": bool(r.get("can_edit_dashboard", False)), 
                         "can_use_ai": bool(r.get("can_use_assistant", False)), 
                         "can_view_ticker": bool(r.get("can_view_ticker", True)),
+                        "can_view_all_tasks": bool(r.get("can_view_all_tasks", False)), # YENİ EKLENDİ
                         "is_cust": bool(r.get("is_customer", False)), 
                         "cust_firm": str(r.get("customer_firm", "")), 
                         "choice": "🏠 Ana Menü"
@@ -667,10 +670,17 @@ else:
             
             # --- DEVAM EDEN İŞLER (CANLI SAYAÇ) ---
             df_devam = pd.read_csv(D_FILE)
-            my_jobs = df_devam[df_devam['Ekleyen'] == st.session_state['user']]
+            
+            # YENİ EKLENEN YETKİ KONTROLÜ
+            if st.session_state.get("can_view_all_tasks", False):
+                my_jobs = df_devam
+                baslik_metni = "### 🚀 Devam Eden İşler (Tümü)"
+            else:
+                my_jobs = df_devam[df_devam['Ekleyen'] == st.session_state['user']]
+                baslik_metni = "### 🚀 Devam Eden İşlerim"
             
             if not my_jobs.empty:
-                st.markdown("### 🚀 Devam Eden İşlerim")
+                st.markdown(baslik_metni)
                 for idx, row in my_jobs.iterrows():
                     now = datetime.datetime.now()
                     ilk_bas = datetime.datetime.fromisoformat(row['Ilk_Baslama'])
@@ -688,7 +698,10 @@ else:
                         
                     guncel_saat = guncel_birikmis / 3600
                     
-                    st.markdown(f"<div class='{css_class}'><b>{row['Firma']} - {row['Makine']}</b><br>Durum: {durum_ikon} | Biriken Süre: {guncel_saat:.2f} Saat</div>", unsafe_allow_html=True)
+                    # İŞİ AÇAN BİLGİSİNİ KARTA EKLEME
+                    ekleyen_bilgisi = f" <span style='color:#64748b; font-size:12px;'>(İşi Açan: {row['Ekleyen']})</span>" if st.session_state.get("can_view_all_tasks", False) else ""
+                    
+                    st.markdown(f"<div class='{css_class}'><b>{row['Firma']} - {row['Makine']}</b>{ekleyen_bilgisi}<br>Durum: {durum_ikon} | Biriken Süre: {guncel_saat:.2f} Saat</div>", unsafe_allow_html=True)
                     
                     c1, c2 = st.columns(2)
                     if row['Durum'] == "Çalışıyor":
@@ -730,7 +743,7 @@ else:
                             "baslama_saati": str(ilk_bas.time())[:5],
                             "bitis_saati": str(now.time())[:5],
                             "toplam_saat": float(toplam_saat),
-                            "ekleyen": st.session_state["user"],
+                            "ekleyen": row['Ekleyen'], # Kendi oturumumuz değil, işi başlatanın adıyla kaydederiz
                             "cihaz": get_device_info(),
                             "fotograf": foto_yolu
                         }
@@ -1174,6 +1187,10 @@ else:
                             e_dash = st.checkbox("Ana Menü Notlarını Düzenleyebilir", value=bool(user_row.get('can_edit_dashboard', False)))
                             e_ai = st.checkbox("Akıllı Asistanı Kullanabilir", value=bool(user_row.get('can_use_assistant', False)))
                             e_ticker = st.checkbox("Canlı Bilgi Göstergesini (Sağ Üst) Görebilir", value=bool(user_row.get('can_view_ticker', True)))
+                            
+                            # YENİ EKLENEN YETKİ (MEVCUT KULLANICI DÜZENLEME)
+                            e_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)", value=bool(user_row.get('can_view_all_tasks', False)))
+                            
                             e_adm = st.checkbox("Yönetici Yetkisi", value=bool(user_row['can_manage_admin']), disabled=(user_row['username']=='admin'))
                             
                             if st.form_submit_button("🔄 Yetkileri Güncelle"):
@@ -1185,6 +1202,7 @@ else:
                                 users_db.at[idx, 'can_edit_dashboard'] = e_dash
                                 users_db.at[idx, 'can_use_assistant'] = e_ai
                                 users_db.at[idx, 'can_view_ticker'] = e_ticker
+                                users_db.at[idx, 'can_view_all_tasks'] = e_view_all # YENİ YETKİ KAYDI
                                 if user_row['username'] != 'admin': 
                                     users_db.at[idx, 'can_manage_admin'] = e_adm
                                 users_db.to_csv(U_FILE, index=False)
@@ -1214,6 +1232,10 @@ else:
                     yd = st.checkbox("Ana Menü Notu Düzenleme")
                     y_ai = st.checkbox("Akıllı Asistan Yetkisi")
                     y_tick = st.checkbox("Canlı Bilgi Göstergesi Yetkisi", value=True)
+                    
+                    # YENİ EKLENEN YETKİ (YENİ KULLANICI)
+                    y_view_all = st.checkbox("Tüm Herkesin Açtığı İşleri Görebilir (Ana Menü)")
+                    
                     ya = st.checkbox("Admin Yetkisi")
                     
                     if st.form_submit_button("Sisteme Kaydet"):
@@ -1226,6 +1248,7 @@ else:
                             "can_edit_dashboard": yd, 
                             "can_use_assistant": y_ai,
                             "can_view_ticker": y_tick,
+                            "can_view_all_tasks": y_view_all, # YENİ YETKİ KAYDI
                             "is_customer": y_cust, 
                             "customer_firm": y_cust_firm if y_cust else ""
                         }])
