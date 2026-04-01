@@ -48,6 +48,17 @@ if "choice" not in st.session_state:
 
 st.markdown("""
     <style>
+    /* --- KURUMSAL GÖRÜNÜM: STREAMLIT İZLERİNİ GİZLEME --- */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    .stDeployButton {display:none !important;}
+    
+    /* MANAGE APP BUTONUNU TAMAMEN GİZLEME KODU */
+    .viewerBadge_container {display: none !important;}
+    #viewerBadge_link {display: none !important;}
+    [data-testid="manage-app-button"] {display: none !important;}
+    
     .stApp { background-color: #f8fafc; color: #1e293b !important; }
     h1, h2, h3, h4, h5, p, span, label, li { color: #1e293b !important; font-family: 'Inter', sans-serif; }
     
@@ -691,7 +702,6 @@ else:
         operator_listesi = get_list("Operatör")
         makine_listesi = get_list("Makine")
         
-        # --- MOBİL HATASINA KESİN ÇÖZÜM: SAAT SEÇENEKLERİ DİZİSİ ---
         saat_secenekleri = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
         bas_idx = saat_secenekleri.index("08:00")
         bit_idx = saat_secenekleri.index("17:00")
@@ -710,7 +720,6 @@ else:
                 
                 col_t1, col_t2 = st.columns(2)
                 
-                # MOBİLDE ÇÖKTÜREN TİME_INPUT YERİNE, GÜVENLİ SELECTBOX KULLANILDI
                 bas_saati_str = col_t1.selectbox("⏰ İşe Başlama Saati", saat_secenekleri, index=bas_idx, key="kayit_bas_saati")
                 bit_saati_str = col_t2.selectbox("🏁 İşin Bitiş Saati", saat_secenekleri, index=bit_idx, key="kayit_bit_saati")
                 
@@ -720,7 +729,7 @@ else:
                 if st.form_submit_button("✅ KAYDI SİSTEME İŞLE"):
                     show_loader("Servis Kaydı Buluta İşleniyor...")
                     
-                    # Saat Hesaplaması (Metinden Çeviri)
+                    # Saat Hesaplaması
                     bh, bm = map(int, bas_saati_str.split(':'))
                     bih, bim = map(int, bit_saati_str.split(':'))
                     
