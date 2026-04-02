@@ -104,24 +104,29 @@ st.markdown("""
     }
     .customer-hero h1, .customer-hero p { color: white !important; }
     
-    /* SAĞ ALT SABİT TELİF YAZISI */
+    /* SAĞ ALT SABİT TELİF YAZISI - MANAGE APP BUTONUNU GİZLEYEN GÜNCEL SÜRÜM */
     .floating-copyright {
         position: fixed;
-        bottom: 15px;
-        right: 15px;
-        background-color: rgba(255, 255, 255, 0.85);
+        bottom: 0px;
+        right: 0px;
+        background-color: #f8fafc;
         color: #64748b;
         font-size: 11px;
         font-weight: 600;
-        padding: 6px 12px;
-        border-radius: 20px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        border: 1px solid #e2e8f0;
-        z-index: 999999;
-        backdrop-filter: blur(5px);
+        padding: 15px 25px;
+        border-top-left-radius: 15px;
+        box-shadow: -3px -3px 10px rgba(0,0,0,0.03);
+        border-top: 1px solid #e2e8f0;
+        border-left: 1px solid #e2e8f0;
+        z-index: 9999999;
         font-family: 'Inter', sans-serif;
-        pointer-events: none;
     }
+
+    /* Streamlit varsayılan sağ üst/alt menülerini gizlemek için ekstra güvenlik */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none !important;}
 
     /* CANLI İŞ KARTI TASARIMI */
     .active-job-card {
