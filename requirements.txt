@@ -1,12 +1,10 @@
 streamlit
 pandas
-supabase
-streamlit-cookies-manager
-user-agents
-streamlit-quill
 plotly
+streamlit-cookies-manager
+user_agents
+streamlit-quill
 requests
-pillow
+supabase
+Pillow
 openpyxl
-streamlit-option-menu
-streamlit-lottie
